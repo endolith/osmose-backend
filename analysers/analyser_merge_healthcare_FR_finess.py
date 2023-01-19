@@ -102,7 +102,7 @@ class SubAnalyser_Merge_Healthcare_FR_Finess(SubAnalyser_Merge_Dynamic):
 
     def phone(self, number):
         if number and len(number) == 10 and number[0] == "0":
-            return "+33" + number[1:]
+            return f"+33{number[1:]}"
 
 
 class Source_Finess(SourceDataGouv):

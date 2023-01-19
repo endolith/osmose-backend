@@ -52,30 +52,35 @@ class Analyser_Osmosis_Building_In_Polygon(Analyser_Osmosis):
 
     def __init__(self, config, logger = None):
         Analyser_Osmosis.__init__(self, config, logger)
-        if not "proj" in self.config.options:
+        if "proj" not in self.config.options:
             return
 
-        self.classs[1] = self.def_class(item = 1310, level = 3, tags = ['landuse', 'fix:chair'],
-            title = T_('Building on agricultural land'),
-            detail = T_(
-'''Buildings of a farm (houses, sheds, stables, barns, ...) are usually located on the farmyard,
+            self.classs[1] = self.def_class(item = 1310, level = 3, tags = ['landuse', 'fix:chair'],
+                title = T_('Building on agricultural land'),
+                detail = T_(
+        '''Buildings of a farm (houses, sheds, stables, barns, ...) are usually located on the farmyard,
 not on the farmland where the crops grow.'''),
-            fix = T_(
-'''Change or split the landuse such that the farm buildings are on an area with `landuse=farmyard`
+                fix = T_(
+        '''Change or split the landuse such that the farm buildings are on an area with `landuse=farmyard`
 and the area where crops grow are within `landuse=farmland` (or more dedicated types of farmland,
 such as `landuse=vineyard` or `landuse=orchard`).
 
 For areas dedicated to greenhouse horticulture, use `landuse=greenhouse_horticulture`.'''),
-            resource = "https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dfarmland")
+                resource = "https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dfarmland")
 
     requires_tables_common = ['buildings']
 
     def analyser_osmosis_common(self):
-        self.run(sql10.format(proj=self.config.options["proj"]), lambda res: {
-            "class": 1,
-            "data": [self.way_full, self.way, self.positionAsText],
-            "text": T_("`{0}` inside `{1}`", "building=" + res[3], 'landuse=' + res[4])
-        })
+        self.run(
+            sql10.format(proj=self.config.options["proj"]),
+            lambda res: {
+                "class": 1,
+                "data": [self.way_full, self.way, self.positionAsText],
+                "text": T_(
+                    "`{0}` inside `{1}`", f"building={res[3]}", f'landuse={res[4]}'
+                ),
+            },
+        )
 
 from .Analyser_Osmosis import TestAnalyserOsmosis
 
@@ -84,9 +89,11 @@ class Test(TestAnalyserOsmosis):
     def setup_class(cls):
         from modules import config
         TestAnalyserOsmosis.setup_class()
-        cls.analyser_conf = cls.load_osm("tests/osmosis_building_in_polygon.osm",
-                                         config.dir_tmp + "/tests/osmosis_building_in_polygon.test.xml",
-                                         {"proj": 23032})
+        cls.analyser_conf = cls.load_osm(
+            "tests/osmosis_building_in_polygon.osm",
+            f"{config.dir_tmp}/tests/osmosis_building_in_polygon.test.xml",
+            {"proj": 23032},
+        )
 
     def test_classes(self):
         with Analyser_Osmosis_Building_In_Polygon(self.analyser_conf, self.logger) as a:

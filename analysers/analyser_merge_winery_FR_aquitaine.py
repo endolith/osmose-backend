@@ -33,22 +33,53 @@ class Analyser_Merge_Winery_FR_aquitaine(Analyser_Merge_Point):
         self.init(
             u"http://catalogue.datalocale.fr/dataset/liste-sites-viticoles-aquitaine",
             u"Liste des sites viticoles en Aquitaine",
-            JSON(Source(attribution = u"Réseau SIRTAQUI - Comité Régional de Tourisme d'Aquitaine - www.sirtaqui-aquitaine.com", millesime = "06/2016",
-                    fileUrl = u"http://wcf.tourinsoft.com/Syndication/aquitaine/7da797c5-e2d9-4bc6-aff5-11f4059b7fc7//Objects?$format=json"),
-                extractor = lambda json: json['d']),
-            Load_XY("LON", "LAT",
-                select = {"TYPEPRODUITS": {"like": "%Vins%"}},
-                xFunction = Load_XY.degree,
-                yFunction = Load_XY.degree),
+            JSON(
+                Source(
+                    attribution=u"Réseau SIRTAQUI - Comité Régional de Tourisme d'Aquitaine - www.sirtaqui-aquitaine.com",
+                    millesime="06/2016",
+                    fileUrl=u"http://wcf.tourinsoft.com/Syndication/aquitaine/7da797c5-e2d9-4bc6-aff5-11f4059b7fc7//Objects?$format=json",
+                ),
+                extractor=lambda json: json['d'],
+            ),
+            Load_XY(
+                "LON",
+                "LAT",
+                select={"TYPEPRODUITS": {"like": "%Vins%"}},
+                xFunction=Load_XY.degree,
+                yFunction=Load_XY.degree,
+            ),
             Conflate(
-                select = Select(
-                    types = ["nodes", "ways"],
-                    tags = {"craft": "winery"}),
-                conflationDistance = 200,
-                mapping = Mapping(
-                    static1 = {"craft": "winery"},
-                    static2 = {"source": self.source},
-                    mapping1 = {
+                select=Select(types=["nodes", "ways"], tags={"craft": "winery"}),
+                conflationDistance=200,
+                mapping=Mapping(
+                    static1={"craft": "winery"},
+                    static2={"source": self.source},
+                    mapping1={
                         "ref:FR:CRTA": "SyndicObjectID",
-                        "website": lambda fields: None if not fields["URL"] else fields["URL"] if fields["URL"].startswith('http') else 'http://' + fields["URL"]},
-                    text = lambda tags, fields: {"en": ', '.join(filter(lambda x: x, [fields["NOMOFFRE"], fields["AD1"], fields["AD1SUITE"], fields["AD2"], fields["AD3"], fields["CP"], fields["COMMUNE"]]))} )))
+                        "website": lambda fields: (
+                            fields["URL"]
+                            if fields["URL"].startswith('http')
+                            else 'http://' + fields["URL"]
+                        )
+                        if fields["URL"]
+                        else None,
+                    },
+                    text=lambda tags, fields: {
+                        "en": ', '.join(
+                            filter(
+                                lambda x: x,
+                                [
+                                    fields["NOMOFFRE"],
+                                    fields["AD1"],
+                                    fields["AD1SUITE"],
+                                    fields["AD2"],
+                                    fields["AD3"],
+                                    fields["CP"],
+                                    fields["COMMUNE"],
+                                ],
+                            )
+                        )
+                    },
+                ),
+            ),
+        )

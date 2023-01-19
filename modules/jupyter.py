@@ -78,7 +78,7 @@ def print_geojson(geojson, limit = 100):
 
     features = j['features']
     if limit is not None:
-        features = features[0:limit]
+        features = features[:limit]
 
     for f in features:
         location = (f['geometry']['coordinates'][1], f['geometry']['coordinates'][0])

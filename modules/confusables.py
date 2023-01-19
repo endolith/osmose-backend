@@ -22,8 +22,7 @@
 from . import confusables_data
 
 def unconfuse(char, script):
-    group = confusables_data.confusables.get(char)
-    if group:
+    if group := confusables_data.confusables.get(char):
         return confusables_data.confusables_fix.get(group).get(script)
 
 
@@ -67,5 +66,5 @@ class Test(unittest.TestCase):
                     pass
                 elif group == prop:
                     wrong += 1
-                    print("group=%s, script=%s, prop=%s" % (group, script, prop))
+                    print(f"group={group}, script={script}, prop={prop}")
         assert wrong == 0

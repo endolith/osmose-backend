@@ -47,36 +47,49 @@ class Analyser_Merge_Geodesie(Analyser_Merge_Point):
         self.init(
             u"http://geodesie.ign.fr",
             u"Fiches géodésiques",
-            CSV(Source(attribution = "©IGN {0} dans le cadre de la cartographie réglementaire", millesime = "2010",
-                    file = "geodesie.csv.bz2", bz2 = True),
-                header = False),
-            Load_XY("lon", "lat",
-                where = lambda res: not (u'Point constaté détruit' in res[u'description'] or u'Point non retrouvé' in res[u'description']), # No more unique ref
-                create = """
+            CSV(
+                Source(
+                    attribution="©IGN {0} dans le cadre de la cartographie réglementaire",
+                    millesime="2010",
+                    file="geodesie.csv.bz2",
+                    bz2=True,
+                ),
+                header=False,
+            ),
+            Load_XY(
+                "lon",
+                "lat",
+                where=lambda res: u'Point constaté détruit'
+                not in res[u'description']
+                and u'Point non retrouvé' not in res[u'description'],
+                create="""
                     id VARCHAR(254) PRIMARY KEY,
                     lat VARCHAR(254),
                     lon VARCHAR(254),
                     description VARCHAR(4096),
                     ele VARCHAR(254),
-                    ref VARCHAR(254)"""),
+                    ref VARCHAR(254)""",
+            ),
             Conflate(
-                select = Select(
-                    types = ["nodes"],
-                    tags = {"man_made": "survey_point"}),
-                osmRef = "ref",
-                extraJoin = "description",
-                mapping = Mapping(
-                    static1 = {
-                        "man_made": "survey_point"},
-                    static2 = {
+                select=Select(types=["nodes"], tags={"man_made": "survey_point"}),
+                osmRef="ref",
+                extraJoin="description",
+                mapping=Mapping(
+                    static1={"man_made": "survey_point"},
+                    static2={
                         "note": u"Ne pas déplacer ce point, cf. - Do not move this node, see - http://wiki.openstreetmap.org/wiki/WikiProject_France/Repères_Géodésiques#Permanence_des_rep.C3.A8res",
-                        "source": self.source},
-                    mapping1 = {
-                        "ref": "ref",
-                        "ele": "ele"},
-                    mapping2 = {
-                        "description": "description"},
-                    text = lambda tags, fields: {"en": "Survey point {0}".format(tags["ref"]), "fr": "Repères géodésiques {0}".format(tags["ref"]), "es": "Señales geodésicas {0}".format(tags["ref"])} )))
+                        "source": self.source,
+                    },
+                    mapping1={"ref": "ref", "ele": "ele"},
+                    mapping2={"description": "description"},
+                    text=lambda tags, fields: {
+                        "en": "Survey point {0}".format(tags["ref"]),
+                        "fr": "Repères géodésiques {0}".format(tags["ref"]),
+                        "es": "Señales geodésicas {0}".format(tags["ref"]),
+                    },
+                ),
+            ),
+        )
 
 
 class Analyser_Merge_Geodesie_Site(Analyser_Merge_Point):

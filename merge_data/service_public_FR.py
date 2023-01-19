@@ -10,8 +10,7 @@ path = 'organismes/'
 def get_poi_info(file_name):
     root = ET.parse(file_name).getroot()
 
-    organisme = {}
-    organisme['id'] = root.get('id')
+    organisme = {'id': root.get('id')}
     organisme['category'] = root.get('pivotLocal')
     organisme['name'] = None
     if root.find('Nom') is not None:
@@ -29,17 +28,16 @@ def get_poi_info(file_name):
     organisme['wheelchair_access'] = None
 
     for address in root.findall('Adresse'):
-        address_elems = []
-        for address_part in address.findall('Ligne'):
-            address_elems.append(address_part.text)
+        address_elems = [
+            address_part.text for address_part in address.findall('Ligne')
+        ]
         if address.find('CodePostal') is not None:
             address_elems.append(address.find('CodePostal').text)
         if address.find('NomCommune') is not None:
             address_elems.append(address.find('NomCommune').text)
         if address.find('Accessibilité') is not None:
             organisme['wheelchair_access'] = address.find('Accessibilité').get('type')
-        geoloc = address.find('Localisation')
-        if geoloc:
+        if geoloc := address.find('Localisation'):
             organisme['latitude'] = geoloc.find('Latitude').text
             organisme['longitude'] = geoloc.find('Longitude').text
             organisme['geoloc_precision'] = int(float(geoloc.find('Précision').text))

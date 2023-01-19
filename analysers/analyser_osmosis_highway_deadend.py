@@ -246,35 +246,35 @@ class Analyser_Osmosis_Highway_DeadEnd(Analyser_Osmosis):
 
     def __init__(self, config, logger = None):
         Analyser_Osmosis.__init__(self, config, logger)
-        if not "proj" in self.config.options:
+        if "proj" not in self.config.options:
             return
-        detail = T_(
-'''The end of the way is not connected to another way.''')
-        self.classs_change[1] = self.def_class(item = 1210, level = 1, tags = ['highway', 'cycleway', 'fix:chair'],
-            title = T_('Unconnected cycleway'),
-            detail = self.merge_doc(detail, T_(
-'''The end of a `highway=cycleway` must be connected to the rest of the
+            detail = T_(
+        '''The end of the way is not connected to another way.''')
+            self.classs_change[1] = self.def_class(item = 1210, level = 1, tags = ['highway', 'cycleway', 'fix:chair'],
+                title = T_('Unconnected cycleway'),
+                detail = self.merge_doc(detail, T_(
+        '''The end of a `highway=cycleway` must be connected to the rest of the
 road network to ensure continuity, especially for routes planner.''')),
-            fix = T_(
-'''Connect the `cycleway` to the road, even with a little virtual
+                fix = T_(
+        '''Connect the `cycleway` to the road, even with a little virtual
 path.'''))
-        self.classs_change[2] = self.def_class(item = 1210, level = 1, tags = ['highway', 'fix:chair'],
-            title = T_('Unconnected highway'),
-            detail = self.merge_doc(detail, T_(
-'''Highway from `motorway` to `tertiary` are important ways. They should
+            self.classs_change[2] = self.def_class(item = 1210, level = 1, tags = ['highway', 'fix:chair'],
+                title = T_('Unconnected highway'),
+                detail = self.merge_doc(detail, T_(
+        '''Highway from `motorway` to `tertiary` are important ways. They should
 lead to somewhere and in particular to a network of minor roads.''')),
-            fix = T_(
-'''Review the classification of road or draw the local road network.'''))
+                fix = T_(
+        '''Review the classification of road or draw the local road network.'''))
         self.classs[3] = self.def_class(item = 1210, level = 1, tags = ["highway", "fix:chair"],
             title = T_('One way inaccessible or missing parking or parking entrance'))
-        self.classs[5] = self.def_class(item = 1210, level = 2, tags = ['highway', 'fix:chair'],
-            title = T_('Unconnected drive-through'),
-            detail = self.merge_doc(detail, T_(
-'''Drive-throughs are usually not dead-ended. Make sure the full drive-through path was drawn, including i.e. turning circles and covered areas.
+            self.classs[5] = self.def_class(item = 1210, level = 2, tags = ['highway', 'fix:chair'],
+                title = T_('Unconnected drive-through'),
+                detail = self.merge_doc(detail, T_(
+        '''Drive-throughs are usually not dead-ended. Make sure the full drive-through path was drawn, including i.e. turning circles and covered areas.
 Ensure that `service=drive-through` is the correct tag.''')),
-            fix = T_(
-'''Review the type of the service road or draw the local road network.'''),
-            resource = 'https://wiki.openstreetmap.org/wiki/Tag:service%3Ddrive-through')
+                fix = T_(
+        '''Review the type of the service road or draw the local road network.'''),
+                resource = 'https://wiki.openstreetmap.org/wiki/Tag:service%3Ddrive-through')
 
         self.callback20 = lambda res: {"class":1 if res[3] == 'cycleway' else 2, "data":[self.way_full, self.node_full, self.positionAsText]}
 
@@ -303,9 +303,11 @@ class Test(TestAnalyserOsmosis):
     def setup_class(cls):
         from modules import config
         TestAnalyserOsmosis.setup_class()
-        cls.analyser_conf = cls.load_osm("tests/osmosis_highway_deadend.osm",
-                                         config.dir_tmp + "/tests/osmosis_highway_deadend.test.xml",
-                                         {"proj": 2154}) # Random proj to satisfy highway table generation
+        cls.analyser_conf = cls.load_osm(
+            "tests/osmosis_highway_deadend.osm",
+            f"{config.dir_tmp}/tests/osmosis_highway_deadend.test.xml",
+            {"proj": 2154},
+        )
 
     def test_classes(self):
         with Analyser_Osmosis_Highway_DeadEnd(self.analyser_conf, self.logger) as a:

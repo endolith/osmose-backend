@@ -43,24 +43,24 @@ class Analyser_Osmosis_Roundabout_Reverse(Analyser_Osmosis):
 
     def __init__(self, config, logger = None):
         Analyser_Osmosis.__init__(self, config, logger)
-        if not "proj" in self.config.options:
+        if "proj" not in self.config.options:
             return
-        self.classs_change[1] = self.def_class(item = 1050, level = 1, tags = ['highway', 'roundabout', 'fix:chair'],
-            title = T_('Reverse roundabout'),
-            detail = T_(
-'''The circulation of the roundabout is drawn clockwise, but in countries
+            self.classs_change[1] = self.def_class(item = 1050, level = 1, tags = ['highway', 'roundabout', 'fix:chair'],
+                title = T_('Reverse roundabout'),
+                detail = T_(
+        '''The circulation of the roundabout is drawn clockwise, but in countries
 where they drive on the right, the circulation of roundabouts is
 counterclockwise, and vice versa for other countries.'''),
-            fix = T_(
-'''For roundabout `junction=roundabout`: change the direction by
+                fix = T_(
+        '''For roundabout `junction=roundabout`: change the direction by
 reversing the order of nodes in the path. In JOSM, select the roundabout
 and use the tool reverse path (shortcut: 'R').'''),
-            trap = T_(
-'''Make sure that it is a roundabout (for example, not a side way in
+                trap = T_(
+        '''Make sure that it is a roundabout (for example, not a side way in
 opposite direction around a square or a central roundabout, or a driveway
 separated by traffic islands at an intersection without cross).'''),
-            example = T_(
-'''![](https://wiki.openstreetmap.org/w/images/6/68/Osmose-eg-error-1050.png)
+                example = T_(
+        '''![](https://wiki.openstreetmap.org/w/images/6/68/Osmose-eg-error-1050.png)
 
 Clockwise rotation.'''))
         self.callback10 = lambda res: {"class":1, "data":[self.way_full, self.positionAsText]}
@@ -84,9 +84,11 @@ class Test(TestAnalyserOsmosis):
     def setup_class(cls):
         from modules import config
         TestAnalyserOsmosis.setup_class()
-        cls.analyser_conf = cls.load_osm("tests/osmosis_roundabout_reverse.test.osm",
-                                         config.dir_tmp + "/tests/osmosis_roundabout_reverse.test.xml",
-                                         {"proj": 2154}) # Random proj for highway table generation
+        cls.analyser_conf = cls.load_osm(
+            "tests/osmosis_roundabout_reverse.test.osm",
+            f"{config.dir_tmp}/tests/osmosis_roundabout_reverse.test.xml",
+            {"proj": 2154},
+        )
 
     def test_left(self):
         self.analyser_conf.options["driving_side"] = "left"

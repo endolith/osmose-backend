@@ -38,17 +38,21 @@ class Geocode_Addok_CSV(Source):
         return getattr(self.source, name)
 
     def open(self):
-        return open(downloader.update_cache('geocoded://' + self.source.fileUrl, 60, fetch=self.fetch))
+        return open(
+            downloader.update_cache(
+                f'geocoded://{self.source.fileUrl}', 60, fetch=self.fetch
+            )
+        )
 
     def fetch(self, url, tmp_file, date_string=None):
         service = u'https://api-adresse.data.gouv.fr/search/csv/'
         outfile = open(tmp_file, 'w', encoding='utf-8')
 
         content = self.source.open().readlines()
-        header = content[0:1]
+        header = content[:1]
         step = 2000
         slices = int((len(content)-1) / step) + 1
-        for i in range(0, slices):
+        for i in range(slices):
             self.logger.log("Geocode slice {0}/{1}".format(i, slices))
             slice = ''.join(header + content[1 + step*i : 1 + step*(i+1)]) # noqa
             r = downloader.requests_retry_session().post(url=service, data={
@@ -61,7 +65,7 @@ class Geocode_Addok_CSV(Source):
             })
             r.raise_for_status()
             if i == 0:
-                text = '\n'.join(r.text.split('\n')[0:])
+                text = '\n'.join(r.text.split('\n')[:])
             else:
                 text = '\n'.join(r.text.split('\n')[1:])
             outfile.write(text)

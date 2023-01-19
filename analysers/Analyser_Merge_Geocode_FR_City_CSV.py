@@ -43,7 +43,11 @@ class Geocode_FR_City_CSV(Source):
         return getattr(self.source, name)
 
     def open(self):
-        return open(downloader.update_cache('citycoded://' + self.source.fileUrl, 60, fetch=self.fetch))
+        return open(
+            downloader.update_cache(
+                f'citycoded://{self.source.fileUrl}', 60, fetch=self.fetch
+            )
+        )
 
     def fetch(self, url, tmp_file, date_string=None):
         data = downloader.urlread('https://geo.api.gouv.fr/communes?zone=metro&fields=nom,code,codesPostaux,siren,codeEpci,codeDepartement,codeRegion,population&format=geojson&geometry=centre', delay=60)

@@ -41,25 +41,63 @@ class Analyser_Merge_Museum_FR(Analyser_Merge_Point):
                 SourceDataGouv(
                     attribution="Ministère de la Culture - Muséofile",
                     dataset="5d12ee8206e3e762c0c89a4c",
-                    resource="5ccd6238-4fb0-4b2c-b14a-581909489320"),
-                separator=';'),
-            Load_XY("geolocalisation_latlong", "geolocalisation_latlong",
-                 where = lambda row: row["geolocalisation_latlong"],
-                 xFunction = lambda x: x and x.split(',')[1],
-                 yFunction = lambda y: y and y.split(',')[0]),
+                    resource="5ccd6238-4fb0-4b2c-b14a-581909489320",
+                ),
+                separator=';',
+            ),
+            Load_XY(
+                "geolocalisation_latlong",
+                "geolocalisation_latlong",
+                where=lambda row: row["geolocalisation_latlong"],
+                xFunction=lambda x: x and x.split(',')[1],
+                yFunction=lambda y: y and y.split(',')[0],
+            ),
             Conflate(
-                select = Select(
-                    types = ["nodes", "ways", "relations"],
-                    tags = {"tourism": "museum"}),
-                conflationDistance = 300,
-                osmRef = "ref:FR:museofile",
-                mapping = Mapping(
-                    static1 = {"tourism": "museum"},
-                    static2 = {"source": self.source},
-                    mapping1 = {"ref:FR:museofile": "ref"},
-                    mapping2 = {
-                        "website": lambda res: None if not res["url_m"] else res["url_m"] if res["url_m"].startswith('http') else 'http://' + res["url_m"],
-                        "phone": lambda res: "+33 " + res["tel_m"][1:] if res["tel_m"] and re_phone.match(res["tel_m"]) else None,
-                        "name": lambda res: res["autnom"][0].upper() + res["autnom"][1:] if res["autnom"] else res["nomoff"][0].upper() + res["nomoff"][1:] if res["nomoff"] else None,
-                        "official_name": lambda res: res["nomoff"][0].upper() + res["nomoff"][1:] if res["autnom"] and res["nomoff"].lower() != res["autnom"].lower() else None},
-                    text = lambda tags, fields: {"en": ' '.join(filter(lambda x: x, [fields["adrl1_m"], fields["cp_m"], fields["ville_m"]]))} )))
+                select=Select(
+                    types=["nodes", "ways", "relations"],
+                    tags={"tourism": "museum"},
+                ),
+                conflationDistance=300,
+                osmRef="ref:FR:museofile",
+                mapping=Mapping(
+                    static1={"tourism": "museum"},
+                    static2={"source": self.source},
+                    mapping1={"ref:FR:museofile": "ref"},
+                    mapping2={
+                        "website": lambda res: (
+                            res["url_m"]
+                            if res["url_m"].startswith('http')
+                            else 'http://' + res["url_m"]
+                        )
+                        if res["url_m"]
+                        else None,
+                        "phone": lambda res: "+33 " + res["tel_m"][1:]
+                        if res["tel_m"] and re_phone.match(res["tel_m"])
+                        else None,
+                        "name": lambda res: res["autnom"][0].upper()
+                        + res["autnom"][1:]
+                        if res["autnom"]
+                        else res["nomoff"][0].upper() + res["nomoff"][1:]
+                        if res["nomoff"]
+                        else None,
+                        "official_name": lambda res: res["nomoff"][0].upper()
+                        + res["nomoff"][1:]
+                        if res["autnom"]
+                        and res["nomoff"].lower() != res["autnom"].lower()
+                        else None,
+                    },
+                    text=lambda tags, fields: {
+                        "en": ' '.join(
+                            filter(
+                                lambda x: x,
+                                [
+                                    fields["adrl1_m"],
+                                    fields["cp_m"],
+                                    fields["ville_m"],
+                                ],
+                            )
+                        )
+                    },
+                ),
+            ),
+        )

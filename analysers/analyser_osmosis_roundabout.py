@@ -86,35 +86,35 @@ class Analyser_Osmosis_Roundabout(Analyser_Osmosis):
 
     def __init__(self, config, logger = None):
         Analyser_Osmosis.__init__(self, config, logger)
-        if not "proj" in self.config.options:
+        if "proj" not in self.config.options:
             return
-        self.classs_change[1] = self.def_class(item = 2010, level = 1, tags = ['highway', 'roundabout', 'fix:imagery'],
-            title = T_('Missing `junction=roundabout`'),
-            detail = T_(
-'''This looks like a roundabout, but the tag `junction=roundabout` is not
+            self.classs_change[1] = self.def_class(item = 2010, level = 1, tags = ['highway', 'roundabout', 'fix:imagery'],
+                title = T_('Missing `junction=roundabout`'),
+                detail = T_(
+        '''This looks like a roundabout, but the tag `junction=roundabout` is not
 present. See [Roundabout](https://wiki.openstreetmap.org/wiki/Roundabout)
 for more info.'''),
-            fix = T_(
-'''If it is really a roundabout, add the tag `junction=roundabout`,
+                fix = T_(
+        '''If it is really a roundabout, add the tag `junction=roundabout`,
 verify that the way direction is counter-clockwise when the driving side is
 on the right, and remove the tag `oneway=yes` if present.'''),
-            trap = T_(
-'''Ensure that it is a roundabout, using satellite imagery or a local
+                trap = T_(
+        '''Ensure that it is a roundabout, using satellite imagery or a local
 survey.
 
 Ensure the traffic on the roundabout has right of way. If not, use `junction=circular` instead.'''))
-        self.classs[2] = self.def_class(item = 2010, level = 2, tags = ['highway', 'roundabout', 'fix:imagery'],
-            title = T_('Roundabout without right of way'),
-            detail = T_(
-'''A highway with `junction=roundabout` must by definition have the right of way.
+            self.classs[2] = self.def_class(item = 2010, level = 2, tags = ['highway', 'roundabout', 'fix:imagery'],
+                title = T_('Roundabout without right of way'),
+                detail = T_(
+        '''A highway with `junction=roundabout` must by definition have the right of way.
 Circular highways without right of way should be tagged as `junction=circular`.'''),
-            fix = T_(
-'''Replace `junction=roundabout` on the entire circular road with `junction=circular`.
+                fix = T_(
+        '''Replace `junction=roundabout` on the entire circular road with `junction=circular`.
 
 If the node with `highway=traffic_signals`, `give_way` or `stop` is actually for the road entering the roundabout, tag it on that way only.'''),
-            trap = T_(
-'''Make sure to tag `oneway=*` when using `junction=circular`. Unlike `junction=roundabout`, `junction=circular` does not imply `oneway=yes`.'''),
-            resource = "https://wiki.openstreetmap.org/wiki/Tag:junction%3Dcircular")
+                trap = T_(
+        '''Make sure to tag `oneway=*` when using `junction=circular`. Unlike `junction=roundabout`, `junction=circular` does not imply `oneway=yes`.'''),
+                resource = "https://wiki.openstreetmap.org/wiki/Tag:junction%3Dcircular")
 
         country = "country" in self.config.options and self.config.options["country"]
         self.callback10 = lambda res: {"class":1, "data":[self.way_full, self.positionAsText],
@@ -144,9 +144,11 @@ class Test(TestAnalyserOsmosis):
     def setup_class(cls):
         from modules import config
         TestAnalyserOsmosis.setup_class()
-        cls.analyser_conf = cls.load_osm("tests/osmosis_roundabout.test.osm",
-                                         config.dir_tmp + "/tests/osmosis_roundabout.test.xml",
-                                         {"proj": 2154}) # Random proj to satisfy highway table generation
+        cls.analyser_conf = cls.load_osm(
+            "tests/osmosis_roundabout.test.osm",
+            f"{config.dir_tmp}/tests/osmosis_roundabout.test.xml",
+            {"proj": 2154},
+        )
 
     def test_class1(self):
         with Analyser_Osmosis_Roundabout(self.analyser_conf, self.logger) as a:

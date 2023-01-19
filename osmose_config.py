@@ -101,11 +101,7 @@ class template_config:
         self.download         = {}
         self.download_repo    = download_repo
         self.analyser: OrderedDict[str, str] = OrderedDict()
-        if analyser_options:
-            self.analyser_options = analyser_options
-        else:
-            self.analyser_options = {}
-
+        self.analyser_options = analyser_options or {}
         self.sql_post_scripts = []  # Scripts to run everytime, just before launching analysers
         self.db_extension_check = []
         self.analyser_updt_url = {}
@@ -114,14 +110,14 @@ class template_config:
         if "diff" in self.download:
             self.download["diff_path"] = os.path.join(self.dir_diffs, self.country)
 
-        if "url" in self.download and not "dst" in self.download:
+        if "url" in self.download and "dst" not in self.download:
             ext = os.path.splitext(self.download["url"])[1]
             for e in [".osm.pbf", ".osm.bz2", ".osm.gz"]:
                 if self.download["url"].endswith(e):
                     ext = e
                     break
 
-            self.download["dst"] = self.dir_extracts + "/" + self.country + ext
+            self.download["dst"] = f"{self.dir_extracts}/{self.country}{ext}"
 
 config: Dict[str, template_config] = OrderedDict()
 
@@ -194,7 +190,7 @@ class default_simple(template_config):
 class default_country_simple(default_simple):
     def __init__(self, part, country, polygon_id=None, analyser_options=None,
                  download_repo=GEOFABRIK, download_country=None, include=[], exclude=[]):
-        part = part + '/' if part is not None else ''
+        part = f'{part}/' if part is not None else ''
 
         if not download_country:
             download_country = country
@@ -210,12 +206,14 @@ class default_country_simple(default_simple):
             self.download["state.txt"] = self.download["diff"] + "state.txt"
         if download_repo == OSMFR:
             self.download["poly"] = self.download["poly"].replace("/extracts/", "/polygons/")
-            self.download["diff"] = self.download_repo + "../replication/" + part + download_country + "/minute/"
+            self.download[
+                "diff"
+            ] = f"{self.download_repo}../replication/{part}{download_country}/minute/"
             self.download["state.txt"] = self.download_repo + part + download_country + ".state.txt"
         if download_repo == OSMCH:
             self.download["url"] = self.download_repo + download_country + "-padded.osm.pbf"
-            self.download["poly"] = self.download_repo + "switzerland-padded.poly"
-            self.download["diff"] = self.download_repo + "replication/hour/"
+            self.download["poly"] = f"{self.download_repo}switzerland-padded.poly"
+            self.download["diff"] = f"{self.download_repo}replication/hour/"
             self.download["state.txt"] = self.download["diff"] + "state.txt"
 
         for analyser in include:
@@ -248,7 +246,7 @@ def gen_country(area, path_base=None,
     exclude_default = exclude
 
     def init(self, path, polygon_id=None, country_code=country_code_default,
-            area=area_default, country=None, path_base=path_base_default, country_base=country_base_default, download_repo=download_repo_default, include=[], exclude=[], **analyser_options):
+                area=area_default, country=None, path_base=path_base_default, country_base=country_base_default, download_repo=download_repo_default, include=[], exclude=[], **analyser_options):
         ao = {'country': country_code}
         ao.update(analyser_options_default)
         ao.update(analyser_options)
@@ -257,7 +255,17 @@ def gen_country(area, path_base=None,
         country = (country or path[-1]).replace('-', '_')
         download_country = '/'.join(filter(lambda a: a is not None, [path_base] + path))
 
-        default_country.__init__(self, area, country_base + '_' + country, polygon_id, ao, download_repo, download_country, include_default + include, exclude_default + exclude)
+        default_country.__init__(
+            self,
+            area,
+            f'{country_base}_{country}',
+            polygon_id,
+            ao,
+            download_repo,
+            download_country,
+            include_default + include,
+            exclude_default + exclude,
+        )
 
     class gen(default_country):
         __init__ = init

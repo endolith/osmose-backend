@@ -33,25 +33,55 @@ class Analyser_Merge_Tourism_FR_Aquitaine_Caravan(Analyser_Merge_Point):
         self.init(
             u"http://catalogue.datalocale.fr/dataset/liste-aires-campingcars-aquitaine",
             u"Liste des aires de camping-cars en Aquitaine",
-            JSON(Source(attribution = u"Réseau SIRTAQUI - Comité Régional de Tourisme d'Aquitaine - www.sirtaqui-aquitaine.com", millesime = "08/2018",
-                    fileUrl = u"http://wcf.tourinsoft.com/Syndication/aquitaine/eda0e9ba-cec4-48f5-bd24-985d1d614c23/Objects?$format=json"),
-                extractor = lambda json: json['d']),
-            Load_XY("LON", "LAT",
-                xFunction = Load_XY.degree,
-                yFunction = Load_XY.degree),
+            JSON(
+                Source(
+                    attribution=u"Réseau SIRTAQUI - Comité Régional de Tourisme d'Aquitaine - www.sirtaqui-aquitaine.com",
+                    millesime="08/2018",
+                    fileUrl=u"http://wcf.tourinsoft.com/Syndication/aquitaine/eda0e9ba-cec4-48f5-bd24-985d1d614c23/Objects?$format=json",
+                ),
+                extractor=lambda json: json['d'],
+            ),
+            Load_XY(
+                "LON", "LAT", xFunction=Load_XY.degree, yFunction=Load_XY.degree
+            ),
             Conflate(
-                select = Select(
-                    types = ["nodes", "ways"],
-                    tags = {"tourism": "caravan_site"}),
-                conflationDistance = 500,
-                mapping = Mapping(
-                    static1 = {"tourism": "caravan_site"},
-                    static2 = {"source": self.source},
-                    mapping1 = {
+                select=Select(
+                    types=["nodes", "ways"], tags={"tourism": "caravan_site"}
+                ),
+                conflationDistance=500,
+                mapping=Mapping(
+                    static1={"tourism": "caravan_site"},
+                    static2={"source": self.source},
+                    mapping1={
                         "name": "NOMOFFRE",
                         "ref:FR:CRTA": "SyndicObjectID",
-                        "website": lambda fields: None if not fields["URL"] else fields["URL"] if fields["URL"].startswith('http') else 'http://' + fields["URL"]},
-                    text = lambda tags, fields: {"en": ', '.join(filter(lambda x: x, [fields["NOMOFFRE"], fields["AD1"], fields["AD1SUITE"], fields["AD2"], fields["AD3"], fields["CP"], fields["COMMUNE"]]))} )))
+                        "website": lambda fields: (
+                            fields["URL"]
+                            if fields["URL"].startswith('http')
+                            else 'http://' + fields["URL"]
+                        )
+                        if fields["URL"]
+                        else None,
+                    },
+                    text=lambda tags, fields: {
+                        "en": ', '.join(
+                            filter(
+                                lambda x: x,
+                                [
+                                    fields["NOMOFFRE"],
+                                    fields["AD1"],
+                                    fields["AD1SUITE"],
+                                    fields["AD2"],
+                                    fields["AD3"],
+                                    fields["CP"],
+                                    fields["COMMUNE"],
+                                ],
+                            )
+                        )
+                    },
+                ),
+            ),
+        )
 
 class Analyser_Merge_Tourism_FR_Aquitaine_Camp(Analyser_Merge_Point):
     def __init__(self, config, logger = None):
@@ -62,23 +92,56 @@ class Analyser_Merge_Tourism_FR_Aquitaine_Camp(Analyser_Merge_Point):
         self.init(
             u"http://catalogue.datalocale.fr/dataset/liste-campings-aquitaine",
             u"Liste des campings en Aquitaine",
-            JSON(Source(attribution = u"Réseau SIRTAQUI - Comité Régional de Tourisme d'Aquitaine - www.sirtaqui-aquitaine.com", millesime = "08/2018",
-                    fileUrl = u"http://wcf.tourinsoft.com/Syndication/aquitaine/13d7f8ab-bd69-4815-b02c-d8134663b849/Objects?$format=json"),
-                extractor = lambda json: json['d']),
-            Load_XY("LON", "LAT",
-                xFunction = Load_XY.degree,
-                yFunction = Load_XY.degree),
+            JSON(
+                Source(
+                    attribution=u"Réseau SIRTAQUI - Comité Régional de Tourisme d'Aquitaine - www.sirtaqui-aquitaine.com",
+                    millesime="08/2018",
+                    fileUrl=u"http://wcf.tourinsoft.com/Syndication/aquitaine/13d7f8ab-bd69-4815-b02c-d8134663b849/Objects?$format=json",
+                ),
+                extractor=lambda json: json['d'],
+            ),
+            Load_XY(
+                "LON", "LAT", xFunction=Load_XY.degree, yFunction=Load_XY.degree
+            ),
             Conflate(
-                select = Select(
-                    types = ["nodes", "ways"],
-                    tags = {"tourism": "camp_site"}),
-                conflationDistance = 300,
-                mapping = Mapping(
-                    static1 = {"tourism": "camp_site"},
-                    static2 = {"source": self.source},
-                    mapping1 = {
+                select=Select(
+                    types=["nodes", "ways"], tags={"tourism": "camp_site"}
+                ),
+                conflationDistance=300,
+                mapping=Mapping(
+                    static1={"tourism": "camp_site"},
+                    static2={"source": self.source},
+                    mapping1={
                         "name": "NOMOFFRE",
-                        "stars": lambda fields: fields["RECHERCHECLAS"][0] if fields["RECHERCHECLAS"] and fields["RECHERCHECLAS"][0].isdigit() else None,
+                        "stars": lambda fields: fields["RECHERCHECLAS"][0]
+                        if fields["RECHERCHECLAS"]
+                        and fields["RECHERCHECLAS"][0].isdigit()
+                        else None,
                         "ref:FR:CRTA": "SyndicObjectID",
-                        "website": lambda fields: None if not fields["URL"] else fields["URL"] if fields["URL"].startswith('http') else 'http://' + fields["URL"]},
-                    text = lambda tags, fields: {"en": ', '.join(filter(lambda x: x, [fields["NOMOFFRE"], fields["AD1"], fields["AD1SUITE"], fields["AD2"], fields["AD3"], fields["CP"], fields["COMMUNE"]]))} )))
+                        "website": lambda fields: (
+                            fields["URL"]
+                            if fields["URL"].startswith('http')
+                            else 'http://' + fields["URL"]
+                        )
+                        if fields["URL"]
+                        else None,
+                    },
+                    text=lambda tags, fields: {
+                        "en": ', '.join(
+                            filter(
+                                lambda x: x,
+                                [
+                                    fields["NOMOFFRE"],
+                                    fields["AD1"],
+                                    fields["AD1SUITE"],
+                                    fields["AD2"],
+                                    fields["AD3"],
+                                    fields["CP"],
+                                    fields["COMMUNE"],
+                                ],
+                            )
+                        )
+                    },
+                ),
+            ),
+        )

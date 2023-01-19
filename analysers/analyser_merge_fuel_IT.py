@@ -98,7 +98,11 @@ class Source_Fuel(Source):
         return getattr(self.source, name)
 
     def open(self):
-        return open(downloader.update_cache('join://' + self.source.fileUrl, 15, fetch=self.fetch))
+        return open(
+            downloader.update_cache(
+                f'join://{self.source.fileUrl}', 15, fetch=self.fetch
+            )
+        )
 
     def fetch(self, url, tmp_file, date_string=None):
         f = downloader.urlopen(self.fileUrl, 15)
@@ -130,8 +134,7 @@ class Source_Fuel(Source):
         header = next(csvreader)
         writer.writerow(header + ['Carburanti'])
         for row in csvreader:
-            impianto = impianti.get(row[0])
-            if impianto:
+            if impianto := impianti.get(row[0]):
                 writer.writerow(row + [ impianto ])
 
         csvfile.seek(0)

@@ -40,7 +40,7 @@ class OsmoseTranslation:
     def add_po(self, fn, base):
         l = fn[:-3]
         po = polib.pofile(base + l + ".po")
-        if not l in self.trans:
+        if l not in self.trans:
             self.languages.append(l)
             self.trans[l] = {}
         for entry in po:
@@ -50,13 +50,16 @@ class OsmoseTranslation:
     def translate(self, string, *args, **kwargs):
         out = {}
 
-        if len(args) == 0 and len(kwargs) == 0:
+        if not args and not kwargs:
             out["en"] = string
 
             for l in self.languages:
-                if string in self.trans[l] and self.trans[l][string] != "":
-                    if len(args) == 0:
-                        out[l] = self.trans[l][string]
+                if (
+                    string in self.trans[l]
+                    and self.trans[l][string] != ""
+                    and not args
+                ):
+                    out[l] = self.trans[l][string]
 
         else:
             args_basic = []

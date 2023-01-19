@@ -69,7 +69,7 @@ class OsmSaxReader(OsmReader, handler.ContentHandler):
         f = self._GetFile()
         line = f.readline()
         if not line.startswith(b"<?xml"):
-            raise OsmSaxNotXMLFile("File %s is not XML" % filename)
+            raise OsmSaxNotXMLFile(f"File {filename} is not XML")
 
     def set_filter_since_timestamp(self, since_timestamp):
         self.since_timestamp = since_timestamp.isoformat()
@@ -94,7 +94,10 @@ class OsmSaxReader(OsmReader, handler.ContentHandler):
         else:
             try:
                 # Compute max timestamp from data
-                res = subprocess.check_output('{} {} --out-statistics | grep "timestamp max"'.format(config.bin_osmconvert, self._filename), shell=True).decode('utf-8')
+                res = subprocess.check_output(
+                    f'{config.bin_osmconvert} {self._filename} --out-statistics | grep "timestamp max"',
+                    shell=True,
+                ).decode('utf-8')
                 s = res.split(' ')[2]
                 return dateutil.parser.parse(s).replace(tzinfo=None)
             except:
@@ -334,18 +337,18 @@ class OsmSaxWriter(XMLGenerator):
             XMLGenerator.__init__(self, out, enc)
 
     def startElement(self, name, attrs):
-        self._write(u'<' + name)
+        self._write(f'<{name}')
         for (name, value) in attrs.items():
-            self._write(u' %s=%s' % (name, quoteattr(value)))
+            self._write(f' {name}={quoteattr(value)}')
         self._write(u'>\n')
 
     def endElement(self, name):
         self._write(u'</%s>\n' % name)
 
     def Element(self, name, attrs):
-        self._write(u'<' + name)
+        self._write(f'<{name}')
         for (name, value) in attrs.items():
-            self._write(u' %s=%s' % (name, quoteattr(value)))
+            self._write(f' {name}={quoteattr(value)}')
         self._write(u' />\n')
 
     def NodeCreate(self, data):

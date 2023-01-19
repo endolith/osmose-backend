@@ -7,7 +7,7 @@ from backports import csv
 
 # Liste des départements
 ListeDept = []
-ListeDept += ["0" + str(x) for x in range(1,10)]
+ListeDept += [f"0{str(x)}" for x in range(1,10)]
 ListeDept += [str(x) for x in range(10,20)]
 ListeDept += ["2A", "2B"]
 ListeDept += [str(x) for x in range(21,96)]
@@ -168,9 +168,6 @@ Bdd1["98758"] = (u"Kouaoua", u"")
 
 Bdd1["98758"] = (u"Île de Clipperton", u"")
 
-################################################################################
-
-f = open("BddCommunes", "w")
-for x in sorted(Bdd1.keys()):
-    f.write(u"\t".join([x, Bdd1[x][0]])+"\n")
-f.close()
+with open("BddCommunes", "w") as f:
+  for x in sorted(Bdd1.keys()):
+      f.write(u"\t".join([x, Bdd1[x][0]])+"\n")

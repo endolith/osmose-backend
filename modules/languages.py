@@ -126,22 +126,18 @@ def scripts(languages):
 
 def languages_are_alphabets(languages):
     scripts_ = scripts(languages)
-    if not scripts_:
-        return False
-    for script in scripts_:
-        if script[0] != '[' and not script_is_alphabet(script):
-            return False
-    return True
+    return (
+        not any(
+            script[0] != '[' and not script_is_alphabet(script)
+            for script in scripts_
+        )
+        if scripts_
+        else False
+    )
 
 def gen_regex(scripts):
     if scripts:
-        ret = r""
-        for s in scripts:
-            if s[0] == r"[":
-                ret += s
-            else:
-                ret += r"\p{" + s + "}"
-        return ret
+        return r"".join(s if s[0] == r"[" else r"\p{" + s + "}" for s in scripts)
 
 ###########################################################################
 import unittest

@@ -35,22 +35,50 @@ class Analyser_Merge_Tourism_FR_Aquitaine_Museum(Analyser_Merge_Point):
         self.init(
             u"http://catalogue.datalocale.fr/dataset/liste-musees-aquitaine",
             u"Liste des musées et centres d'interprétation de Gironde",
-            JSON(Source(attribution = u"Réseau SIRTAQUI - Comité Régional de Tourisme d'Aquitaine - www.sirtaqui-aquitaine.com", millesime = "08/2018",
-                    fileUrl = u"http://wcf.tourinsoft.com/Syndication/aquitaine/094df128-7ac5-43e5-a7e9-a5d752317674/Objects?$format=json"),
-                extractor = lambda json: json['d']),
-            Load_XY("LON", "LAT",
-                xFunction = Load_XY.degree,
-                yFunction = Load_XY.degree),
+            JSON(
+                Source(
+                    attribution=u"Réseau SIRTAQUI - Comité Régional de Tourisme d'Aquitaine - www.sirtaqui-aquitaine.com",
+                    millesime="08/2018",
+                    fileUrl=u"http://wcf.tourinsoft.com/Syndication/aquitaine/094df128-7ac5-43e5-a7e9-a5d752317674/Objects?$format=json",
+                ),
+                extractor=lambda json: json['d'],
+            ),
+            Load_XY(
+                "LON", "LAT", xFunction=Load_XY.degree, yFunction=Load_XY.degree
+            ),
             Conflate(
-                select = Select(
-                    types = ["nodes", "ways"],
-                    tags = {"tourism": "museum"}),
-                conflationDistance = 300,
-                mapping = Mapping(
-                    static1 = {"tourism": "museum"},
-                    static2 = {"source": self.source},
-                    mapping1 = {
+                select=Select(types=["nodes", "ways"], tags={"tourism": "museum"}),
+                conflationDistance=300,
+                mapping=Mapping(
+                    static1={"tourism": "museum"},
+                    static2={"source": self.source},
+                    mapping1={
                         "name": "NOMOFFRE",
                         "ref:FR:CRTA": "SyndicObjectID",
-                        "website": lambda fields: None if not fields["URL"] else fields["URL"] if fields["URL"].startswith('http') else 'http://' + fields["URL"]},
-                    text = lambda tags, fields: {"en": ', '.join(filter(lambda x: x, [fields["NOMOFFRE"], fields["AD1"], fields["AD1SUITE"], fields["AD2"], fields["AD3"], fields["CP"], fields["COMMUNE"]]))} )))
+                        "website": lambda fields: (
+                            fields["URL"]
+                            if fields["URL"].startswith('http')
+                            else 'http://' + fields["URL"]
+                        )
+                        if fields["URL"]
+                        else None,
+                    },
+                    text=lambda tags, fields: {
+                        "en": ', '.join(
+                            filter(
+                                lambda x: x,
+                                [
+                                    fields["NOMOFFRE"],
+                                    fields["AD1"],
+                                    fields["AD1SUITE"],
+                                    fields["AD2"],
+                                    fields["AD3"],
+                                    fields["CP"],
+                                    fields["COMMUNE"],
+                                ],
+                            )
+                        )
+                    },
+                ),
+            ),
+        )

@@ -44,28 +44,47 @@ class SubAnalyser_Datatourisme_FR(SubAnalyser_Merge_Dynamic):
         self.init(
             "https://data.datatourisme.gouv.fr",
             "DATAtourisme, la base nationale des données du tourisme en Open Data",
-            CSV(Source(attribution = "data.gouv.fr:DATAtourisme", millesime = "05/2020", fileUrlCache = 7, # 7d to avoid auto-disable of the data source
-                    fileUrl = "https://diffuseur.datatourisme.fr/webservice/84c2e2e54073df2b931c9f4bf8a3ccf3/b7f07a07-2b8f-4fcb-a74f-fdd68b0f57d5")),
-            Load_XY("Longitude", "Latitude",
-                select = {'type': type_},
-                unique = ["elem"]),
+            CSV(
+                Source(
+                    attribution="data.gouv.fr:DATAtourisme",
+                    millesime="05/2020",
+                    fileUrlCache=7,  # 7d to avoid auto-disable of the data source
+                    fileUrl="https://diffuseur.datatourisme.fr/webservice/84c2e2e54073df2b931c9f4bf8a3ccf3/b7f07a07-2b8f-4fcb-a74f-fdd68b0f57d5",
+                )
+            ),
+            Load_XY(
+                "Longitude", "Latitude", select={'type': type_}, unique=["elem"]
+            ),
             Conflate(
-                select = Select(
-                    types = osm_types,
-                    tags = tags_select),
-                conflationDistance = conflationDistance,
-                mapping = Mapping(
-                    static1 = tags_generate,
-                    static2 = {"source": self.source},
-                    mapping1 = {
-                        "ref:FR:CRTA": lambda fields: fields["identifier"] if fields["publisher_name"] == "SIRTAQUI Nouvelle-Aquitaine" else None,
+                select=Select(types=osm_types, tags=tags_select),
+                conflationDistance=conflationDistance,
+                mapping=Mapping(
+                    static1=tags_generate,
+                    static2={"source": self.source},
+                    mapping1={
+                        "ref:FR:CRTA": lambda fields: fields["identifier"]
+                        if fields["publisher_name"]
+                        == "SIRTAQUI Nouvelle-Aquitaine"
+                        else None,
                         "contact:phone": "contact_phone",
                         "contact:email": "contact_email",
                         "contact:website": "contact_website",
-                        "wheelchair": lambda fields: {"true": "yes", "false": "no"}.get(fields["wheelchair"]),
-                        "takeaway": lambda fields: {"true": "yes", "false": "no"}.get(fields["takeaway"]),
-                        "official_name": "label"},
-                text = lambda tags, fields: {"en": "{} - {} - {} {} - {}".format(fields["label"], fields["street_address"], fields["postalcode_address"], fields["city_address"], fields["elem"])} )))
+                        "wheelchair": lambda fields: {
+                            "true": "yes",
+                            "false": "no",
+                        }.get(fields["wheelchair"]),
+                        "takeaway": lambda fields: {
+                            "true": "yes",
+                            "false": "no",
+                        }.get(fields["takeaway"]),
+                        "official_name": "label",
+                    },
+                    text=lambda tags, fields: {
+                        "en": f'{fields["label"]} - {fields["street_address"]} - {fields["postalcode_address"]} {fields["city_address"]} - {fields["elem"]}'
+                    },
+                ),
+            ),
+        )
 
 # the csv data is generated with the following request:
 sparql = """

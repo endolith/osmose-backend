@@ -41,35 +41,35 @@ import dateutil
 class OsmOsisManager:
 
   def __init__(self, conf, db_host, db_user, db_password, db_base, db_schema, db_persistent, logger):
-    self.conf = conf
+      self.conf = conf
 
-    self.db_host = db_host
-    self.db_user = db_user
-    self.db_base = db_base
-    self.db_password = db_password
-    self.db_schema = db_schema
-    self.db_persistent = db_persistent
-    self.logger = logger
+      self.db_host = db_host
+      self.db_user = db_user
+      self.db_base = db_base
+      self.db_password = db_password
+      self.db_schema = db_schema
+      self.db_persistent = db_persistent
+      self.logger = logger
 
-    self.db_string = ""
-    if self.db_host:
-      self.db_string += "host=%s " % self.db_host
-    self.db_string += "dbname=%s " % self.db_base
-    self.db_string += "user=%s " % self.db_user
-    self.db_string += "password=%s " % self.db_password
-    self.db_string += "options=--search_path=%s,public " % (self.conf.db_schema_path or self.db_schema)
+      self.db_string = ""
+      if self.db_host:
+          self.db_string += f"host={self.db_host} "
+      self.db_string += f"dbname={self.db_base} "
+      self.db_string += f"user={self.db_user} "
+      self.db_string += f"password={self.db_password} "
+      self.db_string += f"options=--search_path={self.conf.db_schema_path or self.db_schema},public "
 
-    self.db_psql_args = [self.db_string]
+      self.db_psql_args = [self.db_string]
 
-    if not self.check_database():
-        raise Exception("Fail check database")
+      if not self.check_database():
+          raise Exception("Fail check database")
 
-    # variable used by osmosis
-    if not "JAVACMD_OPTIONS" in os.environ:
-        os.environ["JAVACMD_OPTIONS"] = ""
-    dir_country_tmp = os.path.join(self.conf.dir_tmp, self.db_schema)
-    os.environ["JAVACMD_OPTIONS"] += " -Djava.io.tmpdir=" + dir_country_tmp
-    os.environ["JAVACMD_OPTIONS"] += " -Duser.timezone=GMT"
+        # variable used by osmosis
+      if "JAVACMD_OPTIONS" not in os.environ:
+          os.environ["JAVACMD_OPTIONS"] = ""
+      dir_country_tmp = os.path.join(self.conf.dir_tmp, self.db_schema)
+      os.environ["JAVACMD_OPTIONS"] += f" -Djava.io.tmpdir={dir_country_tmp}"
+      os.environ["JAVACMD_OPTIONS"] += " -Duser.timezone=GMT"
 
 
   def __del__(self):
@@ -108,202 +108,210 @@ class OsmOsisManager:
 
 
   def set_pgsql_schema(self, reset=False):
-    if reset:
-      db_schema = '"$user"'
-    elif self.db_schema:
-      db_schema = self.db_schema
-    self.logger.log("set pgsql schema to %s" % db_schema)
-    self.psql_c("ALTER ROLE %s IN DATABASE %s SET search_path = %s,public;" % (self.db_user, self.db_base, self.conf.db_schema_path or self.db_schema))
+      if reset:
+        db_schema = '"$user"'
+      elif self.db_schema:
+        db_schema = self.db_schema
+      self.logger.log(f"set pgsql schema to {db_schema}")
+      self.psql_c(
+          f"ALTER ROLE {self.db_user} IN DATABASE {self.db_base} SET search_path = {self.conf.db_schema_path or self.db_schema},public;"
+      )
 
   def lock_database(self):
-    osmosis_lock = False
-    for trial in range(60):
-      # acquire lock
-      try:
-        lfil = "/tmp/osmose-osmosis_import"
-        osmosis_lock = lockfile(lfil)
-        break
-      except:
-        self.logger.err("can't lock %s" % lfil)
-        self.logger.log("waiting 2 minutes")
-        time.sleep(2*60)
+      osmosis_lock = False
+      for _ in range(60):
+              # acquire lock
+          try:
+              lfil = "/tmp/osmose-osmosis_import"
+              osmosis_lock = lockfile(lfil)
+              break
+          except:
+              self.logger.err(f"can't lock {lfil}")
+              self.logger.log("waiting 2 minutes")
+              time.sleep(2*60)
 
-    if not osmosis_lock:
-      self.logger.err("definitively can't lock")
-      raise
-    return osmosis_lock
+      if not osmosis_lock:
+        self.logger.err("definitively can't lock")
+        raise
+      return osmosis_lock
 
 
   def check_database(self):
-    # check if database contains all necessary extensions
-    self.logger.sub().log("check database")
-    gisconn = self.osmosis(schema_path = False).conn()
-    giscurs = gisconn.cursor()
-    for extension in ["hstore"] + self.conf.db_extension_check:
-      giscurs.execute("SELECT installed_version FROM pg_available_extensions WHERE name = %s", [extension])
-      if giscurs.rowcount != 1 or giscurs.fetchone()[0] is None:
-        self.logger.err(u"missing extension: "+extension)
-        return False
+      # check if database contains all necessary extensions
+      self.logger.sub().log("check database")
+      gisconn = self.osmosis(schema_path = False).conn()
+      giscurs = gisconn.cursor()
+      for extension in ["hstore"] + self.conf.db_extension_check:
+          giscurs.execute("SELECT installed_version FROM pg_available_extensions WHERE name = %s", [extension])
+          if giscurs.rowcount != 1 or giscurs.fetchone()[0] is None:
+              self.logger.err(f"missing extension: {extension}")
+              return False
 
-    giscurs.close()
-    self.osmosis_close()
+      giscurs.close()
+      self.osmosis_close()
 
-    return True
+      return True
 
 
   def init_database(self, conf, options):
-    # import osmosis
+        # import osmosis
 
-    # drop schema if present - might be remaining from a previous failing import
-    self.logger.sub().log("DROP SCHEMA %s" % self.db_schema)
-    gisconn = self.osmosis(schema_path=False).conn()
-    giscurs = gisconn.cursor()
-    giscurs.execute("DROP SCHEMA IF EXISTS %s CASCADE" % self.db_schema)
-    giscurs.execute("CREATE SCHEMA %s" % self.db_schema)
-    gisconn.commit()
-    giscurs.close()
-    self.osmosis_close()
+        # drop schema if present - might be remaining from a previous failing import
+      self.logger.sub().log(f"DROP SCHEMA {self.db_schema}")
+      gisconn = self.osmosis(schema_path=False).conn()
+      giscurs = gisconn.cursor()
+      giscurs.execute(f"DROP SCHEMA IF EXISTS {self.db_schema} CASCADE")
+      giscurs.execute(f"CREATE SCHEMA {self.db_schema}")
+      gisconn.commit()
+      giscurs.close()
+      self.osmosis_close()
 
-    # schema
-    self.logger.log(self.logger.log_av_r+"import osmosis schema"+self.logger.log_ap)
-    for script in conf.osmosis_pre_scripts:
-      self.psql_f(script)
+        # schema
+      self.logger.log(
+          f"{self.logger.log_av_r}import osmosis schema{self.logger.log_ap}"
+      )
+      for script in conf.osmosis_pre_scripts:
+        self.psql_f(script)
 
-    # data
-    if options.import_tool == "osmosis-parallel":
-      # Run osmosis and psql import in parallel, thanks to named fifos to send
-      # generated tables directly to COPY functions.
-      parallel = True
-    else:
-      parallel = False
-
-    self.logger.log(self.logger.log_av_r+"import osmosis data"+self.logger.log_ap)
-    cmd  = [conf.bin_osmosis]
-    dst_ext = os.path.splitext(conf.download["dst"])[1]
-    dir_country_tmp = os.path.join(self.conf.dir_tmp, self.db_schema)
-    shutil.rmtree(dir_country_tmp, ignore_errors=True)
-    os.makedirs(dir_country_tmp)
-    if dst_ext == ".pbf":
-      cmd += ["--read-pbf", "file=%s" % conf.download["dst"]]
-    else:
-      cmd += ["--read-xml", "file=%s" % conf.download["dst"]]
-    cmd += ["-quiet"]
-    cmd += ["--write-pgsql-dump", "directory=%s" % dir_country_tmp, "enableLinestringBuilder=yes", "enableKeepPartialLinestring=yes"]
-
-    if parallel:
-      for f in ['nodes.txt',
-                'ways.txt', 'way_nodes.txt',
-                'relations.txt', 'relation_members.txt',
-                'users.txt']:
-        os.mkfifo(os.path.join(dir_country_tmp, f))
-
-    try:
-      bg_proc = []
-
-      bg_proc.append((self.logger.execute_err(cmd, background=parallel), "osmosis"))
-      if parallel:
-        # Reading stdout/stderr must not block
-        os.set_blocking(bg_proc[-1][0].stdout.fileno(), False)
-        os.set_blocking(bg_proc[-1][0].stderr.fileno(), False)
-
-      for script in conf.osmosis_import_prepare_scripts:
-        self.psql_f(script, cwd=dir_country_tmp)
-
-      for script in conf.osmosis_import_scripts:
-        bg_proc.append((self.psql_f(script, cwd=dir_country_tmp, background=parallel), os.path.basename(script)))
-        if parallel:
-          os.set_blocking(bg_proc[-1][0].stdout.fileno(), False)
-          os.set_blocking(bg_proc[-1][0].stderr.fileno(), False)
-
-      if parallel:
-        # Wait for all background processes, and get their stdout/stderr messages
-        while bg_proc:
-          new_bg_proc = bg_proc[:]
-          for (p, name) in bg_proc:
-            try:
-                for line in p.stdout:
-                  self.logger.log("  " + name + ": " + line.decode('utf-8').strip())
-                for line in p.stderr:
-                  self.logger.log("  " + name + ": " + line.decode('utf-8').strip())
-                # Need timeout so that we don't have another process blocked
-                # while waiting for stdout/stderr to be emptied.
-                p.wait(timeout=1)
-                self.logger.log("  " + name + ": end")
-            except subprocess.TimeoutExpired:
-                continue
-            if p.returncode:
-              raise RuntimeError("'%s' exited with status %s" % (' '.join(p.args), repr(p.returncode)))
-            new_bg_proc.remove((p, name))
-          bg_proc = new_bg_proc
-
-    except:
-      if parallel:
-        for (p, name) in bg_proc:
-          if p.returncode is None:
-            self.logger.err("Killing pid=%d - %s" % (p.pid, p.args))
-            p.kill()
-      raise
-
-    finally:
-      # clean even in case of an exception
+        # data
+      parallel = options.import_tool == "osmosis-parallel"
+      self.logger.log(
+          f"{self.logger.log_av_r}import osmosis data{self.logger.log_ap}"
+      )
+      cmd  = [conf.bin_osmosis]
+      dst_ext = os.path.splitext(conf.download["dst"])[1]
+      dir_country_tmp = os.path.join(self.conf.dir_tmp, self.db_schema)
       shutil.rmtree(dir_country_tmp, ignore_errors=True)
+      os.makedirs(dir_country_tmp)
+      if dst_ext == ".pbf":
+          cmd += ["--read-pbf", f'file={conf.download["dst"]}']
+      else:
+          cmd += ["--read-xml", f'file={conf.download["dst"]}']
+      cmd += ["-quiet"]
+      cmd += [
+          "--write-pgsql-dump",
+          f"directory={dir_country_tmp}",
+          "enableLinestringBuilder=yes",
+          "enableKeepPartialLinestring=yes",
+      ]
 
-    # post import scripts
-    self.logger.log(self.logger.log_av_r+"import osmosis post scripts"+self.logger.log_ap)
-    for script in conf.osmosis_post_scripts:
-      self.psql_f(script)
+      if parallel:
+        for f in ['nodes.txt',
+                  'ways.txt', 'way_nodes.txt',
+                  'relations.txt', 'relation_members.txt',
+                  'users.txt']:
+          os.mkfifo(os.path.join(dir_country_tmp, f))
 
-    self.osmosis_close()
+      try:
+          bg_proc = [(self.logger.execute_err(cmd, background=parallel), "osmosis")]
+
+          if parallel:
+            # Reading stdout/stderr must not block
+            os.set_blocking(bg_proc[-1][0].stdout.fileno(), False)
+            os.set_blocking(bg_proc[-1][0].stderr.fileno(), False)
+
+          for script in conf.osmosis_import_prepare_scripts:
+            self.psql_f(script, cwd=dir_country_tmp)
+
+          for script in conf.osmosis_import_scripts:
+            bg_proc.append((self.psql_f(script, cwd=dir_country_tmp, background=parallel), os.path.basename(script)))
+            if parallel:
+              os.set_blocking(bg_proc[-1][0].stdout.fileno(), False)
+              os.set_blocking(bg_proc[-1][0].stderr.fileno(), False)
+
+          if parallel:
+                    # Wait for all background processes, and get their stdout/stderr messages
+              while bg_proc:
+                  new_bg_proc = bg_proc[:]
+                  for (p, name) in bg_proc:
+                      try:
+                          for line in p.stdout:
+                              self.logger.log(f"  {name}: " + line.decode('utf-8').strip())
+                          for line in p.stderr:
+                              self.logger.log(f"  {name}: " + line.decode('utf-8').strip())
+                          # Need timeout so that we don't have another process blocked
+                          # while waiting for stdout/stderr to be emptied.
+                          p.wait(timeout=1)
+                          self.logger.log(f"  {name}: end")
+                      except subprocess.TimeoutExpired:
+                          continue
+                      if p.returncode:
+                          raise RuntimeError(
+                              f"'{' '.join(p.args)}' exited with status {repr(p.returncode)}"
+                          )
+                      new_bg_proc.remove((p, name))
+                  bg_proc = new_bg_proc
+
+      except:
+        if parallel:
+          for (p, name) in bg_proc:
+            if p.returncode is None:
+              self.logger.err("Killing pid=%d - %s" % (p.pid, p.args))
+              p.kill()
+        raise
+
+      finally:
+          # clean even in case of an exception
+          shutil.rmtree(dir_country_tmp, ignore_errors=True)
+
+        # post import scripts
+      self.logger.log(
+          f"{self.logger.log_av_r}import osmosis post scripts{self.logger.log_ap}"
+      )
+      for script in conf.osmosis_post_scripts:
+        self.psql_f(script)
+
+      self.osmosis_close()
 
 
   def update_metainfo(self, conf):
-    # Fill metainfo table
-    gisconn = self.osmosis().conn()
-    giscurs = gisconn.cursor()
+      # Fill metainfo table
+      gisconn = self.osmosis().conn()
+      giscurs = gisconn.cursor()
 
-    diff_path = conf.download["diff_path"]
-    state_file = os.path.join(diff_path, "state.txt")
-    dst_pbf = conf.download.get("dst")
+      diff_path = conf.download["diff_path"]
+      state_file = os.path.join(diff_path, "state.txt")
+      dst_pbf = conf.download.get("dst")
 
-    from modules.OsmPbf import OsmPbfReader
-    osm_state = OsmPbfReader(dst_pbf, state_file=state_file).timestamp()
+      from modules.OsmPbf import OsmPbfReader
+      osm_state = OsmPbfReader(dst_pbf, state_file=state_file).timestamp()
 
-    giscurs.execute("UPDATE metainfo SET tstamp = %s", [osm_state])
-    self.logger.sub().log("OSM data timestamp: {}".format(osm_state))
+      giscurs.execute("UPDATE metainfo SET tstamp = %s", [osm_state])
+      self.logger.sub().log(f"OSM data timestamp: {osm_state}")
 
-    gisconn.commit()
-    giscurs.close()
-    self.osmosis_close()
+      gisconn.commit()
+      giscurs.close()
+      self.osmosis_close()
 
 
   def clean_database(self, conf, no_clean):
-    gisconn = self.osmosis(schema_path = False).conn()
-    giscurs = gisconn.cursor()
+      gisconn = self.osmosis(schema_path = False).conn()
+      giscurs = gisconn.cursor()
 
-    if conf.db_persistent:
-      pass
+      if conf.db_persistent:
+          pass
 
-    elif no_clean:
-      # grant read-only access to everybody
-      self.logger.sub().log("GRANT USAGE %s" % self.db_schema)
-      sql = "GRANT USAGE ON SCHEMA %s TO public" % self.db_schema
-      self.logger.sub().log(sql)
-      giscurs.execute(sql)
-      for t in ["nodes", "ways", "way_nodes", "relations", "relation_members", "users", "schema_info", "metainfo"]:
-         sql = "GRANT SELECT ON %s.%s TO public" % (self.db_schema, t)
-         self.logger.sub().log(sql)
-         giscurs.execute(sql)
+      elif no_clean:
+              # grant read-only access to everybody
+          self.logger.sub().log(f"GRANT USAGE {self.db_schema}")
+          sql = f"GRANT USAGE ON SCHEMA {self.db_schema} TO public"
+          self.logger.sub().log(sql)
+          giscurs.execute(sql)
+          for t in ["nodes", "ways", "way_nodes", "relations", "relation_members", "users", "schema_info", "metainfo"]:
+              sql = f"GRANT SELECT ON {self.db_schema}.{t} TO public"
+              self.logger.sub().log(sql)
+              giscurs.execute(sql)
 
-    else:
-      # drop all tables
-      self.logger.sub().log("DROP SCHEMA %s" % self.db_schema)
-      sql = "DROP SCHEMA IF EXISTS %s CASCADE;" % self.db_schema
-      self.logger.sub().log(sql)
-      giscurs.execute(sql)
+      else:
+              # drop all tables
+          self.logger.sub().log(f"DROP SCHEMA {self.db_schema}")
+          sql = f"DROP SCHEMA IF EXISTS {self.db_schema} CASCADE;"
+          self.logger.sub().log(sql)
+          giscurs.execute(sql)
 
-    gisconn.commit()
-    giscurs.close()
-    self.osmosis_close()
+      gisconn.commit()
+      giscurs.close()
+      self.osmosis_close()
 
 
   def check_osmosis_diff(self, conf):
@@ -321,119 +329,127 @@ class OsmOsisManager:
 
 
   def init_osmosis_diff(self, conf):
-    self.logger.log(self.logger.log_av_r+"init osmosis replication for diff"+self.logger.log_ap)
-    diff_path = conf.download["diff_path"]
+      self.logger.log(
+          f"{self.logger.log_av_r}init osmosis replication for diff{self.logger.log_ap}"
+      )
+      diff_path = conf.download["diff_path"]
 
-    for f_name in ["configuration.txt", "download.lock", "state.txt"]:
-        f = os.path.join(diff_path, f_name)
-        if os.path.exists(f):
-            os.remove(f)
+      for f_name in ["configuration.txt", "download.lock", "state.txt"]:
+          f = os.path.join(diff_path, f_name)
+          if os.path.exists(f):
+              os.remove(f)
 
-    cmd  = [conf.bin_osmosis]
-    cmd += ["--read-replication-interval-init", "workingDirectory=%s" % diff_path]
-    cmd += ["-quiet"]
-    self.logger.execute_err(cmd)
+      cmd  = [conf.bin_osmosis]
+      cmd += ["--read-replication-interval-init", f"workingDirectory={diff_path}"]
+      cmd += ["-quiet"]
+      self.logger.execute_err(cmd)
 
-    for line in fileinput.input(os.path.join(diff_path, "configuration.txt"), inplace=1):
-        if line.startswith("baseUrl"):
-            sys.stdout.write("baseUrl=" + conf.download["diff"])
-        elif line.startswith("maxInterval"):
-            if "geofabrik" in conf.download["diff"]:
-                # on daily diffs provided by Geofabrik, we should apply only one diff at a time
-                sys.stdout.write("maxInterval=" + str(60*60*24//2)) # 1/2 day at most
-            else:
-                sys.stdout.write("maxInterval=" + str(7*60*60*24)) # 7 day at most
-        else:
-            sys.stdout.write(line)
-    fileinput.close()
+      for line in fileinput.input(os.path.join(diff_path, "configuration.txt"), inplace=1):
+          if line.startswith("baseUrl"):
+              sys.stdout.write("baseUrl=" + conf.download["diff"])
+          elif line.startswith("maxInterval"):
+              if "geofabrik" in conf.download["diff"]:
+                                # on daily diffs provided by Geofabrik, we should apply only one diff at a time
+                  sys.stdout.write(f"maxInterval={str(60 * 60 * 24 // 2)}")
+              else:
+                  sys.stdout.write(f"maxInterval={str(7 * 60 * 60 * 24)}")
+          else:
+              sys.stdout.write(line)
+      fileinput.close()
 
-    download.dl(conf.download["state.txt"],
-                os.path.join(diff_path, "state.txt"),
-                self.logger.sub(),
-                min_file_size=10)
+      download.dl(conf.download["state.txt"],
+                  os.path.join(diff_path, "state.txt"),
+                  self.logger.sub(),
+                  min_file_size=10)
 
 
   def run_osmosis_diff(self, conf):
-    self.logger.log(self.logger.log_av_r+"run osmosis replication"+self.logger.log_ap)
-    diff_path = conf.download["diff_path"]
-    xml_change = os.path.join(diff_path, "change.osc.gz")
-    tmp_pbf_file = conf.download["dst"] + ".tmp"
+      self.logger.log(
+          f"{self.logger.log_av_r}run osmosis replication{self.logger.log_ap}"
+      )
+      diff_path = conf.download["diff_path"]
+      xml_change = os.path.join(diff_path, "change.osc.gz")
+      tmp_pbf_file = conf.download["dst"] + ".tmp"
 
-    shutil.copyfile(os.path.join(diff_path, "state.txt"),
-                    os.path.join(diff_path, "state.txt.old"))
+      shutil.copyfile(os.path.join(diff_path, "state.txt"),
+                      os.path.join(diff_path, "state.txt.old"))
 
-    dir_country_tmp = os.path.join(self.conf.dir_tmp, self.db_schema)
-    shutil.rmtree(dir_country_tmp, ignore_errors=True)
-    os.makedirs(dir_country_tmp)
-
-    try:
-      is_uptodate = False
-      nb_iter = 0
-
-      osm_state = OsmState(os.path.join(diff_path, "state.txt"))
-      prev_state_ts = osm_state.timestamp()
-      cur_ts = datetime.datetime.today()
-      print("state: ", osm_state.timestamp(), end=' ')
-      if osm_state.timestamp() < (cur_ts - datetime.timedelta(days=10)):
-        # Skip updates, and directly download .pbf file if extract is too old
-        self.logger.log(self.logger.log_av_r + "stop updates, to download full extract" + self.logger.log_ap)
-        return (False, None)
-
-      while not is_uptodate and nb_iter < 10:
-        nb_iter += 1
-        self.logger.log("iteration=%d" % nb_iter)
-
-        try:
-          cmd  = [conf.bin_osmosis]
-          cmd += ["--read-replication-interval", "workingDirectory=%s" % diff_path]
-          cmd += ["--simplify-change", "--write-xml-change", "file=%s" % xml_change]
-          cmd += ["-quiet"]
-          self.logger.execute_err(cmd)
-        except:
-          self.logger.log("waiting 2 minutes")
-          time.sleep(2*60)
-          continue
-
-        cmd  = [conf.bin_osmosis]
-        cmd += ["--read-xml-change", "file=%s" % xml_change]
-        cmd += ["--read-pbf", "file=%s" % conf.download["dst"] ]
-        cmd += ["--apply-change", "--buffer"]
-        cmd += ["--write-pbf", "file=%s" % tmp_pbf_file]
-        cmd += ["-quiet"]
-        self.logger.execute_err(cmd)
-
-        shutil.move(tmp_pbf_file, conf.download["dst"])
-
-        # find if state.txt is more recent than one day
-        osm_state = OsmState(os.path.join(diff_path, "state.txt"))
-        cur_ts = datetime.datetime.today()
-        print("state: ", nb_iter, " - ", osm_state.timestamp(), end=' ')
-        if prev_state_ts is not None:
-          print("   ", prev_state_ts - osm_state.timestamp())
-        if osm_state.timestamp() > (cur_ts - datetime.timedelta(days=1)):
-          is_uptodate = True
-        elif prev_state_ts == osm_state.timestamp():
-          is_uptodate = True
-        else:
-          prev_state_ts = osm_state.timestamp()
-
-      if not is_uptodate:
-        # we didn't get the latest version of the pbf file
-        self.logger.log(self.logger.log_av_r + "didn't get latest version of osm file" + self.logger.log_ap)
-        return (False, None)
-      elif nb_iter == 1:
-        return (True, xml_change)
-      else:
-        # TODO: we should return a merge of all xml change files
-        return (True, None)
-
-    except:
+      dir_country_tmp = os.path.join(self.conf.dir_tmp, self.db_schema)
       shutil.rmtree(dir_country_tmp, ignore_errors=True)
-      self.logger.err("got error, aborting")
-      shutil.copyfile(os.path.join(diff_path, "state.txt.old"),
-                      os.path.join(diff_path, "state.txt"))
+      os.makedirs(dir_country_tmp)
 
-      raise
+      try:
+          is_uptodate = False
+          nb_iter = 0
+
+          osm_state = OsmState(os.path.join(diff_path, "state.txt"))
+          prev_state_ts = osm_state.timestamp()
+          cur_ts = datetime.datetime.now()
+          print("state: ", osm_state.timestamp(), end=' ')
+          if osm_state.timestamp() < (cur_ts - datetime.timedelta(days=10)):
+                    # Skip updates, and directly download .pbf file if extract is too old
+              self.logger.log(
+                  f"{self.logger.log_av_r}stop updates, to download full extract{self.logger.log_ap}"
+              )
+              return (False, None)
+
+          while not is_uptodate and nb_iter < 10:
+              nb_iter += 1
+              self.logger.log("iteration=%d" % nb_iter)
+
+              try:
+                  cmd  = [conf.bin_osmosis]
+                  cmd += ["--read-replication-interval", f"workingDirectory={diff_path}"]
+                  cmd += ["--simplify-change", "--write-xml-change", f"file={xml_change}"]
+                  cmd += ["-quiet"]
+                  self.logger.execute_err(cmd)
+              except:
+                self.logger.log("waiting 2 minutes")
+                time.sleep(2*60)
+                continue
+
+              cmd  = [conf.bin_osmosis]
+              cmd += ["--read-xml-change", f"file={xml_change}"]
+              cmd += ["--read-pbf", f'file={conf.download["dst"]}']
+              cmd += ["--apply-change", "--buffer"]
+              cmd += ["--write-pbf", f"file={tmp_pbf_file}"]
+              cmd += ["-quiet"]
+              self.logger.execute_err(cmd)
+
+              shutil.move(tmp_pbf_file, conf.download["dst"])
+
+              # find if state.txt is more recent than one day
+              osm_state = OsmState(os.path.join(diff_path, "state.txt"))
+              cur_ts = datetime.datetime.now()
+              print("state: ", nb_iter, " - ", osm_state.timestamp(), end=' ')
+              if prev_state_ts is not None:
+                print("   ", prev_state_ts - osm_state.timestamp())
+              if osm_state.timestamp() > (cur_ts - datetime.timedelta(days=1)):
+                is_uptodate = True
+              elif prev_state_ts == osm_state.timestamp():
+                is_uptodate = True
+              else:
+                prev_state_ts = osm_state.timestamp()
+
+          if not is_uptodate:
+                    # we didn't get the latest version of the pbf file
+              self.logger.log(
+                  f"{self.logger.log_av_r}didn't get latest version of osm file{self.logger.log_ap}"
+              )
+              return (False, None)
+          elif nb_iter == 1:
+            return (True, xml_change)
+          else:
+              # TODO: we should return a merge of all xml change files
+              return (True, None)
+
+      except:
+        shutil.rmtree(dir_country_tmp, ignore_errors=True)
+        self.logger.err("got error, aborting")
+        shutil.copyfile(os.path.join(diff_path, "state.txt.old"),
+                        os.path.join(diff_path, "state.txt"))
+
+        raise
 
   def check_osmium_diff(self, conf):
     self.logger.log("check osmium replication")
@@ -452,79 +468,80 @@ class OsmOsisManager:
     return True
 
   def run_osmium_diff(self, conf):
-    self.logger.log(self.logger.log_av_r + "run pyosmium replication" + self.logger.log_ap)
-    pbf_file = conf.download["dst"]
-    tmp_pbf_file = conf.download["dst"] + ".tmp.pbf"
+      self.logger.log(
+          f"{self.logger.log_av_r}run pyosmium replication{self.logger.log_ap}"
+      )
+      pbf_file = conf.download["dst"]
+      tmp_pbf_file = conf.download["dst"] + ".tmp.pbf"
 
-    try:
-      is_uptodate = False
-      nb_iter = 0
+      try:
+          is_uptodate = False
+          nb_iter = 0
 
-      osmobject = osmium.io.Reader(pbf_file)
-      prev_timestamp = dateutil.parser.isoparse(osmobject.header().get('osmosis_replication_timestamp'))
-      cur_ts = datetime.datetime.now(datetime.timezone.utc)
-      print("state: ", prev_timestamp, end=' ')
-      if prev_timestamp < (cur_ts - datetime.timedelta(days=10)):
-        # Skip updates, and directly download .pbf file if extract is too old
-        self.logger.log(self.logger.log_av_r + "stop updates, to download full extract" + self.logger.log_ap)
-        return (False, None)
+          osmobject = osmium.io.Reader(pbf_file)
+          prev_timestamp = dateutil.parser.isoparse(osmobject.header().get('osmosis_replication_timestamp'))
+          cur_ts = datetime.datetime.now(datetime.timezone.utc)
+          print("state: ", prev_timestamp, end=' ')
+          if prev_timestamp < (cur_ts - datetime.timedelta(days=10)):
+                    # Skip updates, and directly download .pbf file if extract is too old
+              self.logger.log(
+                  f"{self.logger.log_av_r}stop updates, to download full extract{self.logger.log_ap}"
+              )
+              return (False, None)
 
-      while not is_uptodate and nb_iter < 10:
-        nb_iter += 1
-        self.logger.log("iteration=%d" % nb_iter)
+          while not is_uptodate and nb_iter < 10:
+              nb_iter += 1
+              self.logger.log("iteration=%d" % nb_iter)
 
-        if os.path.exists(tmp_pbf_file):
-          os.remove(tmp_pbf_file)
+              if os.path.exists(tmp_pbf_file):
+                os.remove(tmp_pbf_file)
 
-        try:
-          cmd  = [conf.bin_pyosmium_up_to_date]
-          cmd += ["-v"]
-          cmd += ["--outfile", tmp_pbf_file]
-          cmd += ["--tmpdir", conf.dir_tmp]
-          cmd += ["--force-update-of-old-planet"]
-          cmd += [pbf_file]
-          # pyosmium-up-to-date returns:
-          #   - 0 on full update, or if pbf is already up-to-date
-          #   - 1 on partial update
-          ret = self.logger.execute_err(cmd, valid_return_code=(0, 1))
+              try:
+                  cmd  = [conf.bin_pyosmium_up_to_date]
+                  cmd += ["-v"]
+                  cmd += ["--outfile", tmp_pbf_file]
+                  cmd += ["--tmpdir", conf.dir_tmp]
+                  cmd += ["--force-update-of-old-planet"]
+                  cmd += [pbf_file]
+                  # pyosmium-up-to-date returns:
+                  #   - 0 on full update, or if pbf is already up-to-date
+                  #   - 1 on partial update
+                  ret = self.logger.execute_err(cmd, valid_return_code=(0, 1))
 
-          if ret == 0 or ret == 1:
-            shutil.move(tmp_pbf_file, pbf_file)
+                  if ret in [0, 1]:
+                      shutil.move(tmp_pbf_file, pbf_file)
 
-          if ret == 1:
-            # we didn't fully update pbf file
-            raise Exception("Not fully updated")
+                  if ret == 1:
+                    # we didn't fully update pbf file
+                    raise Exception("Not fully updated")
 
-        except:
-          self.logger.log("waiting 2 minutes")
-          time.sleep(2*60)
-          continue
+              except:
+                self.logger.log("waiting 2 minutes")
+                time.sleep(2*60)
+                continue
 
-        # Check if state.txt is more recent than one day
-        osmobject = osmium.io.Reader(pbf_file)
-        cur_timestamp = dateutil.parser.isoparse(osmobject.header().get('osmosis_replication_timestamp'))
-        print("state: ", nb_iter, " - ", cur_timestamp, end=' ')
-        print("   ", prev_timestamp - cur_timestamp)
-        if cur_timestamp > (cur_ts - datetime.timedelta(days=1)):
-          is_uptodate = True
-        elif prev_timestamp == cur_timestamp:
-          is_uptodate = True
-        else:
-          prev_timestamp = cur_timestamp
+              # Check if state.txt is more recent than one day
+              osmobject = osmium.io.Reader(pbf_file)
+              cur_timestamp = dateutil.parser.isoparse(osmobject.header().get('osmosis_replication_timestamp'))
+              print("state: ", nb_iter, " - ", cur_timestamp, end=' ')
+              print("   ", prev_timestamp - cur_timestamp)
+              if cur_timestamp > (cur_ts - datetime.timedelta(days=1)):
+                is_uptodate = True
+              elif prev_timestamp == cur_timestamp:
+                is_uptodate = True
+              else:
+                prev_timestamp = cur_timestamp
 
-      if not is_uptodate:
-        # we didn't get the latest version of the pbf file
-        self.logger.log(self.logger.log_av_r + "didn't get latest version of osm file" + self.logger.log_ap)
-        return (False, None)
-      elif nb_iter == 1:
-        return (True, None)
-      else:
-        # TODO: we should return a merge of all xml change files
-        return (True, None)
-
-    except:
-      self.logger.err("got error, aborting")
-      raise
+          if is_uptodate:
+              return (True, None)
+                # we didn't get the latest version of the pbf file
+          self.logger.log(
+              f"{self.logger.log_av_r}didn't get latest version of osm file{self.logger.log_ap}"
+          )
+          return (False, None)
+      except:
+        self.logger.err("got error, aborting")
+        raise
 
 
   def check_change(self, conf):
@@ -537,74 +554,87 @@ class OsmOsisManager:
 
 
   def init_change(self, conf):
-    self.init_osmosis_diff(conf)
+      self.init_osmosis_diff(conf)
 
-    self.logger.log(self.logger.log_av_r+"import osmosis change post scripts"+self.logger.log_ap)
-    self.set_pgsql_schema()
-    for script in conf.osmosis_change_init_post_scripts:
-        self.psql_f(script)
-    self.set_pgsql_schema(reset=True)
+      self.logger.log(
+          f"{self.logger.log_av_r}import osmosis change post scripts{self.logger.log_ap}"
+      )
+      self.set_pgsql_schema()
+      for script in conf.osmosis_change_init_post_scripts:
+          self.psql_f(script)
+      self.set_pgsql_schema(reset=True)
 
 
   def run_change(self, conf):
-    self.logger.log(self.logger.log_av_r+"run osmosis replication"+self.logger.log_ap)
-    diff_path = conf.download["diff_path"]
-    xml_change = os.path.join(diff_path, "change.osc.gz")
+      self.logger.log(
+          f"{self.logger.log_av_r}run osmosis replication{self.logger.log_ap}"
+      )
+      diff_path = conf.download["diff_path"]
+      xml_change = os.path.join(diff_path, "change.osc.gz")
 
-    shutil.copyfile(os.path.join(diff_path, "state.txt"),
-                    os.path.join(diff_path, "state.txt.old"))
+      shutil.copyfile(os.path.join(diff_path, "state.txt"),
+                      os.path.join(diff_path, "state.txt.old"))
 
-    try:
-      osmosis_lock = self.lock_database()
-      self.set_pgsql_schema()
-      cmd  = [conf.bin_osmosis]
-      cmd += ["--read-replication-interval", "workingDirectory=%s" % diff_path]
-      cmd += ["--simplify-change", "--write-xml-change", "file=%s" % xml_change]
-      cmd += ["-quiet"]
-      self.logger.execute_err(cmd)
+      try:
+          osmosis_lock = self.lock_database()
+          self.set_pgsql_schema()
+          cmd  = [conf.bin_osmosis]
+          cmd += ["--read-replication-interval", f"workingDirectory={diff_path}"]
+          cmd += ["--simplify-change", "--write-xml-change", f"file={xml_change}"]
+          cmd += ["-quiet"]
+          self.logger.execute_err(cmd)
 
-      self.psql_c("TRUNCATE TABLE actions")
+          self.psql_c("TRUNCATE TABLE actions")
 
-      cmd  = [conf.bin_osmosis]
-      cmd += ["--read-xml-change", xml_change]
-      cmd += ["--write-pgsql-change", "database=%s" % conf.db_base, "user=%s" % conf.db_user, "password=%s" % conf.db_password]
-      cmd += ["-quiet"]
-      self.logger.execute_err(cmd)
+          cmd  = [conf.bin_osmosis]
+          cmd += ["--read-xml-change", xml_change]
+          cmd += [
+              "--write-pgsql-change",
+              f"database={conf.db_base}",
+              f"user={conf.db_user}",
+              f"password={conf.db_password}",
+          ]
+          cmd += ["-quiet"]
+          self.logger.execute_err(cmd)
 
-      self.logger.log(self.logger.log_av_r+"import osmosis change post scripts"+self.logger.log_ap)
-      for script in conf.osmosis_change_post_scripts:
-        self.logger.log(script)
-        self.psql_f(script)
-      self.set_pgsql_schema(reset=True)
-      del osmosis_lock
+          self.logger.log(
+              f"{self.logger.log_av_r}import osmosis change post scripts{self.logger.log_ap}"
+          )
+          for script in conf.osmosis_change_post_scripts:
+            self.logger.log(script)
+            self.psql_f(script)
+          self.set_pgsql_schema(reset=True)
+          del osmosis_lock
 
-      # Fill metainfo table
-      gisconn = self.osmosis().conn()
-      giscurs = gisconn.cursor()
+          # Fill metainfo table
+          gisconn = self.osmosis().conn()
+          giscurs = gisconn.cursor()
 
-      osm_state = OsmState(os.path.join(diff_path, "state.txt"))
-      osm_state_old = OsmState(os.path.join(diff_path, "state.txt.old"))
-      giscurs.execute("UPDATE metainfo SET tstamp = %s, tstamp_action = %s", [osm_state.timestamp(), osm_state_old.timestamp()])
+          osm_state = OsmState(os.path.join(diff_path, "state.txt"))
+          osm_state_old = OsmState(os.path.join(diff_path, "state.txt.old"))
+          giscurs.execute("UPDATE metainfo SET tstamp = %s, tstamp_action = %s", [osm_state.timestamp(), osm_state_old.timestamp()])
 
-      gisconn.commit()
-      giscurs.close()
-      self.osmosis_close()
+          gisconn.commit()
+          giscurs.close()
+          self.osmosis_close()
 
-      return xml_change
+          return xml_change
 
-    except:
-      self.logger.err("got error, aborting")
-      shutil.copyfile(os.path.join(diff_path, "state.txt.old"),
-                      os.path.join(diff_path, "state.txt"))
+      except:
+        self.logger.err("got error, aborting")
+        shutil.copyfile(os.path.join(diff_path, "state.txt.old"),
+                        os.path.join(diff_path, "state.txt"))
 
-      raise
+        raise
 
 
   def run_resume(self, conf):
-    self.logger.log(self.logger.log_av_r+"import osmosis resume post scripts"+self.logger.log_ap)
-    self.set_pgsql_schema()
-    for script in conf.osmosis_resume_init_post_scripts:
-      self.psql_f(script)
+      self.logger.log(
+          f"{self.logger.log_av_r}import osmosis resume post scripts{self.logger.log_ap}"
+      )
+      self.set_pgsql_schema()
+      for script in conf.osmosis_resume_init_post_scripts:
+        self.psql_f(script)
 
 
   def postgis_version(self):

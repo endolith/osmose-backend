@@ -60,10 +60,7 @@ class Analyser_Merge_Traffic_Signs(Analyser_Merge_Dynamic):
         mapingfile = json.loads(open(mapping).read())
         for r in mapingfile:
             if self.check_not_only_for(r.get('not_for'), r.get('only_for')):
-                if speed_limit_unit:
-                    unit = ' ' + speed_limit_unit
-                else:
-                    unit = ''
+                unit = f' {speed_limit_unit}' if speed_limit_unit else ''
                 r['select_tags'] = list(map(lambda select: self.dict_replace(select, '{speed_limit_unit}', unit), r['select_tags']))
                 r['generate_tags'] = self.dict_replace(r['generate_tags'], '{speed_limit_unit}', unit)
 
@@ -74,12 +71,10 @@ class SubAnalyser_Merge_Traffic_Signs(SubAnalyser_Merge_Dynamic):
     def __init__(self, config, error_file, logger, item, classs, level, tags, otype, conflation, title, object, selectTags, generateTags, mapping, source, layer):
         SubAnalyser_Merge_Dynamic.__init__(self, config, error_file, logger)
 
-        missing_tags = []
-        for selection in selectTags:
-            missing_tags.append(' + '.join(
-                ['`{}={}`'.format(kv[0], kv[1] if kv[1] else '*') for kv in selection.items()]
-            ))
-
+        missing_tags = [
+            ' + '.join([f"`{kv[0]}={kv[1] or '*'}`" for kv in selection.items()])
+            for selection in selectTags
+        ]
         self.def_class_missing_official(item = item, id = classs, level = level, tags = ['merge', 'highway', 'fix:picture', 'fix:survey'] + tags,
             title = T_('Unmapped {0}', T_(title)),
             detail = T_('Traffic sign ({1}) detected by Mapillary, but no nearby tagging of any:{0}', '\n\n- ' + '\n- '.join(missing_tags), T_(title)),
@@ -88,20 +83,49 @@ class SubAnalyser_Merge_Traffic_Signs(SubAnalyser_Merge_Dynamic):
         self.init(
             "https://www.mapillary.com",
             u"Traffic Signs from Street-level imagery",
-            CSV(Source_Mapillary(attribution = u"Mapillary Traffic Signs", country = config.options['country'], polygon_id = config.polygon_id, logger = logger, mapping = mapping, source = source, layer = layer)),
-            Load_XY("X", "Y",
-                select = {"value": object}),
+            CSV(
+                Source_Mapillary(
+                    attribution=u"Mapillary Traffic Signs",
+                    country=config.options['country'],
+                    polygon_id=config.polygon_id,
+                    logger=logger,
+                    mapping=mapping,
+                    source=source,
+                    layer=layer,
+                )
+            ),
+            Load_XY("X", "Y", select={"value": object}),
             Conflate(
-                select = Select(
-                    types = otype,
-                    tags = selectTags),
-                conflationDistance = conflation,
-                subclass_hash = lambda fields: {'id': fields['id'], 'value': fields['value']},
-                mapping = Mapping(
-                    static1 = dict(filter(lambda kv: kv[1], generateTags.items())),
-                    static2 = {"source": self.source},
-                    mapping1 = {
-                        "survey:date": lambda res: str(datetime.fromtimestamp(int(res["last_seen_at"])))[0:10]},
-                    text = lambda tags, fields:
-                        T_('Observed between {0} and {1}', str(datetime.fromtimestamp(int(fields["first_seen_at"])))[0:10], str(datetime.fromtimestamp(int(fields["last_seen_at"])))[0:10]) if fields["first_seen_at"] != fields["last_seen_at"] else
-                        T_('Observed on {0}', str(datetime.fromtimestamp(int(fields["first_seen_at"])))[0:10]) )))
+                select=Select(types=otype, tags=selectTags),
+                conflationDistance=conflation,
+                subclass_hash=lambda fields: {
+                    'id': fields['id'],
+                    'value': fields['value'],
+                },
+                mapping=Mapping(
+                    static1=dict(filter(lambda kv: kv[1], generateTags.items())),
+                    static2={"source": self.source},
+                    mapping1={
+                        "survey:date": lambda res: str(
+                            datetime.fromtimestamp(int(res["last_seen_at"]))
+                        )[:10]
+                    },
+                    text=lambda tags, fields: T_(
+                        'Observed between {0} and {1}',
+                        str(datetime.fromtimestamp(int(fields["first_seen_at"])))[
+                            :10
+                        ],
+                        str(datetime.fromtimestamp(int(fields["last_seen_at"])))[
+                            :10
+                        ],
+                    )
+                    if fields["first_seen_at"] != fields["last_seen_at"]
+                    else T_(
+                        'Observed on {0}',
+                        str(datetime.fromtimestamp(int(fields["first_seen_at"])))[
+                            :10
+                        ],
+                    ),
+                ),
+            ),
+        )

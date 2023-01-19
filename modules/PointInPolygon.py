@@ -34,10 +34,7 @@ class PointInPolygon:
 
     def sameVDir(self, x1, y1, x2, y2, x3, y3):
         # Check if next segment have same direction again vertical.
-        if y1 < y2:
-            return y2 < y3
-        else:
-            return y2 > y3
+        return y2 < y3 if y1 < y2 else y2 > y3
 
     class Interval:
         def __init__(self, x1, y1, x2, y2, sameDir):
@@ -52,15 +49,28 @@ class PointInPolygon:
             self.sameDir = sameDir
 
         def __repr__(self):
-            return "(%s,%s)-(%s, %s)" % (self.x1, self.y1, self.x2, self.y2)
+            return f"({self.x1},{self.y1})-({self.x2}, {self.y2})"
 
     def build_polygon(self, coords):
         (x,y) = coords.xy
         n = len(x)
-        ivals = []
-        for i in range(n):
-            ivals.append(self.Interval(x[i], y[i], x[(i+1) % n], y[(i+1) % n], self.sameVDir(x[i], y[i], x[(i+1) % n], y[(i+1) % n], x[(i+2) % n], y[(i+2) % n])))
-        return ivals
+        return [
+            self.Interval(
+                x[i],
+                y[i],
+                x[(i + 1) % n],
+                y[(i + 1) % n],
+                self.sameVDir(
+                    x[i],
+                    y[i],
+                    x[(i + 1) % n],
+                    y[(i + 1) % n],
+                    x[(i + 2) % n],
+                    y[(i + 2) % n],
+                ),
+            )
+            for i in range(n)
+        ]
 
     def build(self):
         ivals = []

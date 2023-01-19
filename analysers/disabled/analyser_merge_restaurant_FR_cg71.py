@@ -79,7 +79,9 @@ class Analyser_Merge_Restaurant_FR_cg71(Analyser_Merge):
 
     def cuisine(self, fields):
         categorie = fields["CATEGORIE"]
-        if self.amenity_type.get(categorie) == "restaurant":
-            if fields["CATEGORIE"] in self.cuisine_categorie:
-                return self.cuisine_categorie[categorie]
+        if (
+            self.amenity_type.get(categorie) == "restaurant"
+            and categorie in self.cuisine_categorie
+        ):
+            return self.cuisine_categorie[categorie]
         return None

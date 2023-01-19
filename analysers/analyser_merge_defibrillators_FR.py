@@ -30,30 +30,26 @@ class Analyser_merge_defibrillators_FR(Analyser_Merge_Point):
     def normalizeEtage(self, etg):
         if etg is None:
             return None
-        else:
-            etg = unidecode.unidecode(etg.lower().replace("-", "").replace(".", "").replace(" ", ""))
-            if etg == "0":
-                return None
-            elif etg in ["rezdechaussee", "rezdechausse", "reddechaussee", "rdc"]:
-                return "0"
-            elif re.compile(r"^r\+\d$").match(etg):
-                return etg[2:]
-            elif re.compile(r"^niveau -?\d+$").match(etg):
-                return etg[7:]
-            elif re.compile(r"^-?\d+ e.*$").match(etg):
-                return etg.split(" ")[0]
-            elif re.compile(r"^-?\d+e.*$").match(etg):
-                return etg.split("e")[0]
-            elif re.compile(r"^-?\d+$").match(etg):
-                return etg
-            else:
-                return None
-
-    def normalizeHours(self, jours, heures):
-        if jours == "{7j/7}" and heures == "{24h/24}":
-            return "24/7"
+        etg = unidecode.unidecode(etg.lower().replace("-", "").replace(".", "").replace(" ", ""))
+        if etg == "0":
+            return None
+        elif etg in ["rezdechaussee", "rezdechausse", "reddechaussee", "rdc"]:
+            return "0"
+        elif re.compile(r"^r\+\d$").match(etg):
+            return etg[2:]
+        elif re.compile(r"^niveau -?\d+$").match(etg):
+            return etg[7:]
+        elif re.compile(r"^-?\d+ e.*$").match(etg):
+            return etg.split(" ")[0]
+        elif re.compile(r"^-?\d+e.*$").match(etg):
+            return etg.split("e")[0]
+        elif re.compile(r"^-?\d+$").match(etg):
+            return etg
         else:
             return None
+
+    def normalizeHours(self, jours, heures):
+        return "24/7" if jours == "{7j/7}" and heures == "{24h/24}" else None
 
     def __init__(self, config, logger = None):
         Analyser_Merge_Point.__init__(self, config, logger)

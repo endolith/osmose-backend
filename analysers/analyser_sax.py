@@ -148,9 +148,8 @@ class Analyser_Sax(Analyser):
         return self._reader.UserGet(UserId)
 
     def ExtendData(self, data):
-        if "uid" in data and not "user" in data:
-            user = self.UserGet(data["uid"])
-            if user:
+        if "uid" in data and "user" not in data:
+            if user := self.UserGet(data["uid"]):
                 data["user"] = user
         return data
 
@@ -192,7 +191,7 @@ class Analyser_Sax(Analyser):
 
         # Write the issues
         if err:
-            if not "uid" in data and not "user" in data:
+            if "uid" not in data and "user" not in data:
                 data = self.NodeGet(data["id"]) or data
             data = self.ExtendData(data)
             for e in err:
@@ -248,9 +247,8 @@ class Analyser_Sax(Analyser):
 
         # Write the issues
         if err:
-            if not "uid" in data and not "user" in data:
-                tmp_data = self.WayGet(data["id"]) or data
-                if tmp_data:
+            if "uid" not in data and "user" not in data:
+                if tmp_data := self.WayGet(data["id"]) or data:
                     # way from reader can be None if there is only one node on it
                     data = tmp_data
             node = self.NodeGet(nds[len(nds)//2])
@@ -294,8 +292,7 @@ class Analyser_Sax(Analyser):
             if memb[u"type"] == u"node":
                 node = self.NodeGet(memb[u"ref"])
             elif memb[u"type"] == "way":
-                way = self.WayGet(memb[u"ref"])
-                if way:
+                if way := self.WayGet(memb[u"ref"]):
                     node = self.NodeGet(way[u"nd"][0])
             if node:
                 break
@@ -306,8 +303,7 @@ class Analyser_Sax(Analyser):
                     if ref == data["id"] or ref in recur_control:
                         # don't reread the same relation
                         continue
-                    rel = self.RelationGet(memb[u"ref"])
-                    if rel:
+                    if rel := self.RelationGet(ref):
                         node = self.locateRelation(rel, recur_control=recur_control+[data["id"]])
                 if node:
                     break
@@ -334,7 +330,7 @@ class Analyser_Sax(Analyser):
 
         # Write the issues
         if err and data[u"member"]:
-            if not "uid" in data and not "user" in data:
+            if "uid" not in data and "user" not in data:
                 data = self.RelationGet(data["id"]) or data
             node = self.locateRelation(data)
             if not node:
@@ -393,10 +389,8 @@ class Analyser_Sax(Analyser):
     ################################################################################
 
     def _load_plugin(self, plugin):
-        module = importlib.import_module('plugins.' + plugin)
-        if getattr(module, 'P_' + plugin, None):
-            pass
-        else:
+        module = importlib.import_module(f'plugins.{plugin}')
+        if not getattr(module, f'P_{plugin}', None):
             return getattr(module, plugin)
 
     def _load_all_plugins(self):
@@ -407,8 +401,7 @@ class Analyser_Sax(Analyser):
             if not plugin.endswith(".py") or plugin in ("__init__.py", "Plugin.py"):
                 continue
             pluginName = plugin[:-3]
-            clazz = self._load_plugin(pluginName)
-            if clazz:
+            if clazz := self._load_plugin(pluginName):
                 available_plugins.append(clazz)
 
         return available_plugins
@@ -421,30 +414,41 @@ class Analyser_Sax(Analyser):
         self.pluginsWayMethodes = []
         self.pluginsRelationMethodes = []
 
-        conf_limit = set()
-        for i in ("country", "language"):
-            if i in self.config.options:
-                if isinstance(self.config.options[i], str):
-                    conf_limit.add(self.config.options[i])
-
+        conf_limit = {
+            self.config.options[i]
+            for i in ("country", "language")
+            if i in self.config.options and isinstance(self.config.options[i], str)
+        }
         for pluginClazz in available_plugin_classes:
-            if "only_for" in dir(pluginClazz):
-                if not any(map(lambda of: any(map(lambda co: co.startswith(of), conf_limit)), pluginClazz.only_for)):
-                    self._sublog(u"skip "+pluginClazz.__name__)
-                    continue
+            if "only_for" in dir(pluginClazz) and not any(
+                map(
+                    lambda of: any(map(lambda co: co.startswith(of), conf_limit)),
+                    pluginClazz.only_for,
+                )
+            ):
+                self._sublog(f"skip {pluginClazz.__name__}")
+                continue
 
-            if "not_for" in dir(pluginClazz):
-                if any(map(lambda of: any(map(lambda co: co.startswith(of), conf_limit)), pluginClazz.not_for)):
-                    self._sublog(u"skip "+pluginClazz.__name__)
-                    continue
+            if "not_for" in dir(pluginClazz) and any(
+                map(
+                    lambda of: any(map(lambda co: co.startswith(of), conf_limit)),
+                    pluginClazz.not_for,
+                )
+            ):
+                self._sublog(f"skip {pluginClazz.__name__}")
+                continue
 
             # Plugin Initialisation
             pluginInstance = pluginClazz(self)
             if pluginInstance.init(self.logger.sub().sub()) is False:
-                self._sublog(u"self-disabled "+pluginClazz.__name__)
+                self._sublog(f"self-disabled {pluginClazz.__name__}")
                 continue
             else:
-                self._sublog(u"init "+pluginClazz.__name__+" ("+", ".join(pluginInstance.availableMethodes())+")")
+                self._sublog(
+                    f"init {pluginClazz.__name__} ("
+                    + ", ".join(pluginInstance.availableMethodes())
+                    + ")"
+                )
 
                 pluginAvailableMethodes = pluginInstance.availableMethodes()
                 self.plugins[pluginClazz.__name__] = pluginInstance
@@ -487,7 +491,7 @@ class Analyser_Sax(Analyser):
     ################################################################################
 
     def _run_analyse(self):
-        self._log(u"Analysing file "+self.config.src)
+        self._log(f"Analysing file {self.config.src}")
         self.parser.CopyTo(self)
         self._log(u"Analyse finished")
 
@@ -523,6 +527,7 @@ class TestAnalyserOsmosis(TestAnalyser):
 
     def setUp(self):
 
+
         class config:
             options = {"project": "openstreetmap"}
             src = "tests/saint_barthelemy.osm.gz"
@@ -536,13 +541,11 @@ class TestAnalyserOsmosis(TestAnalyser):
         # create directory for results
         import os
         from modules import config
-        self.dirname = config.dir_tmp + "/tests/"
+        self.dirname = f"{config.dir_tmp}/tests/"
         try:
             os.makedirs(self.dirname)
         except OSError:
-            if os.path.isdir(self.dirname):
-                pass
-            else:
+            if not os.path.isdir(self.dirname):
                 raise
 
     def test(self):
@@ -575,7 +578,10 @@ class TestAnalyserOsmosis(TestAnalyser):
         self.config.error_file = IssuesFileOsmose.IssuesFileOsmose(self.xml_res_file)
         self.config.options = {"project": "openstreetmap"}
         with Analyser_Sax(self.config) as analyser_obj:
-            analyser_obj.analyser_resume(dateutil.parser.parse("2012-07-18T11:04:56Z").replace(tzinfo=None), {'N': set([1]), 'W': set([24552698]), 'R': set()})
+            analyser_obj.analyser_resume(
+                dateutil.parser.parse("2012-07-18T11:04:56Z").replace(tzinfo=None),
+                {'N': {1}, 'W': {24552698}, 'R': set()},
+            )
 
         self.compare_results("tests/results/sax.test_resume.xml")
 
@@ -588,7 +594,10 @@ class TestAnalyserOsmosis(TestAnalyser):
         self.config.error_file = IssuesFileOsmose.IssuesFileOsmose(self.xml_res_file)
         self.config.options = {"project": "openstreetmap"}
         with Analyser_Sax(self.config) as analyser_obj:
-            analyser_obj.analyser_resume(dateutil.parser.parse("2030-01-01T01:01:01Z").replace(tzinfo=None), {'N': set([1]), 'W': set([1000,1001]), 'R': set()})
+            analyser_obj.analyser_resume(
+                dateutil.parser.parse("2030-01-01T01:01:01Z").replace(tzinfo=None),
+                {'N': {1}, 'W': {1000, 1001}, 'R': set()},
+            )
 
         self.compare_results("tests/results/sax.test_resume_empty.xml")
 

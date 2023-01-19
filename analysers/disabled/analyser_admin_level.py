@@ -34,14 +34,14 @@ class DataHandler:
     def WayCreate(self, data):
         if data[u"tag"].get(u"boundary", None) != u"administrative":
             return
-        if not "admin_level" in data[u"tag"]:
+        if "admin_level" not in data[u"tag"]:
             return
         self.ways[data["id"]] = data[u"tag"]["admin_level"]
 
     def RelationCreate(self, data):
         if data[u"tag"].get(u"boundary", None) != u"administrative":
             return
-        if not "admin_level" in data[u"tag"]:
+        if "admin_level" not in data[u"tag"]:
             return
         self.rels[data["id"]] = data[u"tag"]["admin_level"]
 
@@ -55,17 +55,28 @@ class Analyser_Admin_Level(Analyser_Sax):
     ################################################################################
 
     def _load_plugins(self):
-        self._Err = {}
-        self._Err[1] = { "item": 6050,
-                         "level": 3,
-                         "desc": { "en": u"Wrong administrative level", "fr": u"Mauvais niveau administratif", "es": u"Nivel administrativo incorrecto"},
-                         "tag": ["boundary", "fix:chair"]
-                       }
-        self._Err[2] = { "item": 6050,
-                         "level": 3,
-                         "desc": { "en": u"admin_level unreadable", "fr": u"admin_level illisible", "es": u"admin_level ilegible"},
-                         "tag": ["boundary", "value", "fix:chair"]
-                       }
+        self._Err = {
+            1: {
+                "item": 6050,
+                "level": 3,
+                "desc": {
+                    "en": u"Wrong administrative level",
+                    "fr": u"Mauvais niveau administratif",
+                    "es": u"Nivel administrativo incorrecto",
+                },
+                "tag": ["boundary", "fix:chair"],
+            },
+            2: {
+                "item": 6050,
+                "level": 3,
+                "desc": {
+                    "en": u"admin_level unreadable",
+                    "fr": u"admin_level illisible",
+                    "es": u"admin_level ilegible",
+                },
+                "tag": ["boundary", "value", "fix:chair"],
+            },
+        }
 
     ################################################################################
 
@@ -85,14 +96,8 @@ class Analyser_Admin_Level(Analyser_Sax):
 
         del o
 
-        ## find admin level
-        way_to_level = {}
-        rel_to_level = {}
-        for wid in wdta:
-            way_to_level[wid] = 99
-        for rid in rdta:
-            rel_to_level[rid] = 99
-
+        way_to_level = {wid: 99 for wid in wdta}
+        rel_to_level = {rid: 99 for rid in rdta}
         self.logger.log("check admin level - relations")
         for rid in rdta:
 
@@ -123,12 +128,10 @@ class Analyser_Admin_Level(Analyser_Sax):
                 continue
 
             for m in rta[u"member"]:
-                if m[u"type"] == u"way":
-                    if m[u"ref"] in way_to_level:
-                        way_to_level[m[u"ref"]] = min(way_to_level[m[u"ref"]], level)
-                if m[u"type"] == u"relation":
-                    if m[u"ref"] in rel_to_level:
-                        rel_to_level[m[u"ref"]] = min(rel_to_level[m[u"ref"]], level)
+                if m[u"type"] == u"way" and m[u"ref"] in way_to_level:
+                    way_to_level[m[u"ref"]] = min(way_to_level[m[u"ref"]], level)
+                if m[u"type"] == u"relation" and m[u"ref"] in rel_to_level:
+                    rel_to_level[m[u"ref"]] = min(rel_to_level[m[u"ref"]], level)
 
         ##
         self.logger.log("check admin level - ways")
@@ -158,15 +161,11 @@ class Analyser_Admin_Level(Analyser_Sax):
                     continue
 
                 wta["tag"]["admin_level"] = wdta[wid]
-                n = self.NodeGet(wta["nd"][0])
-                if not n:
-                    continue
-
-                self.error_file.error(1, None, {"fr": u"admin_level devrait être %d"%way_to_level[wid], "en": u"admin_level should be %d"%way_to_level[wid], "es": u"admin_level debería ser %d" %way_to_level[wid]}, None, None, None, {
-                    "position": [n],
-                    "way": [wta]
-                })
-                continue
+                if n := self.NodeGet(wta["nd"][0]):
+                    self.error_file.error(1, None, {"fr": u"admin_level devrait être %d"%way_to_level[wid], "en": u"admin_level should be %d"%way_to_level[wid], "es": u"admin_level debería ser %d" %way_to_level[wid]}, None, None, None, {
+                        "position": [n],
+                        "way": [wta]
+                    })
 
     ################################################################################
 

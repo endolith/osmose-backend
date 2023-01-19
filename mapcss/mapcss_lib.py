@@ -32,10 +32,9 @@ class str_value_(str):
     def __new__(cls, string):
         if string.__class__ == str_value_:
             return string
-        else: # Keep None string value
-            s = super(str_value_, cls).__new__(cls, string)
-            s.none = string is None
-            return s
+        s = super(str_value_, cls).__new__(cls, string)
+        s.none = string is None
+        return s
 
     def __radd__(self, o):
         if self.none:
@@ -150,17 +149,11 @@ class str_value_(str):
             return super(str_value_, self).__ge__(o)
 
     def __bool__(self):
-        if self.none:
-            return False
-        else:
-            return len(self) > 0
+        return False if self.none else len(self) > 0
 
     def to_n(self):
         try:
-            if '.' in self:
-                return float(self)
-            else:
-                return int(self)
+            return float(self) if '.' in self else int(self)
         except:
             raise RuleAbort()
 
@@ -182,8 +175,8 @@ def _uncapture_param(capture, a):
         return k
     elif ty == 'value':
         return v
-    else: # tag
-        return k + '=' + v
+    else:
+        return f'{k}={v}'
 
 def _tag_uncapture(capture, string):
     if string is not None:
@@ -259,10 +252,7 @@ tanh = str_value_num_wrapper(math.tanh)
 #b ? fst : snd
 #    if (b) then fst else snd
 def cond(b, fst, snd):
-    if b:
-        return fst
-    else:
-        return snd
+    return fst if b else snd
 
 #list(a, b, ...)
 #    create list of values, e.g. for the dashes property
@@ -303,15 +293,14 @@ def tag(tags, key_name):
     if tags is not None and key_name is not None:
         if key_name.__class__ in (str, str_value_):
             return str_value(tags.get(key_name))
-        else: # regex
-            for k in tags.keys():
-                if _re_search(key_name, k):
-                    return str_value(tags[k])
+        for k in tags.keys():
+            if _re_search(key_name, k):
+                return str_value(tags[k])
     return None_value
 
 def _tag_capture(stock, index, tags, key_name):
     if tags is not None and key_name is not None:
-        if not index in stock:
+        if index not in stock:
             stock_index = stock[index] = [None, None]
         else:
             stock_index = stock[index]
@@ -335,7 +324,7 @@ def _tag_capture(stock, index, tags, key_name):
     return None_value
 
 def _value_capture(stock, index, value):
-    if not index in stock:
+    if index not in stock:
         stock[index] = [None, None]
     if value.__class__ in (str, str_value_):
         # If not a string, let the tag capture fill the value part
@@ -456,11 +445,10 @@ def regexp_test(regexp, string):
 def regexp_match(regexp, string):
     if regexp is None or string is None:
         return False
-    else:
-        a = regexp.findall(string)
-        if a:
-            a = [string] + flatten(a)
-        return list(map(str_value, a))
+    a = regexp.findall(string)
+    if a:
+        a = [string] + flatten(a)
+    return list(map(str_value, a))
 
 #regexp_match(regexp, string, flags)
 #    Tries to match string against pattern regexp. Returns a list of capture groups in case of success. The first element (index 0) is the complete match (i.e. string). Further elements correspond to the bracketed parts of the regular expression. Flags is a string that may contain "i" (case insensitive), "m" (multiline) and "s" ("dot all") [since 5701]

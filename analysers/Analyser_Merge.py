@@ -349,9 +349,8 @@ class Source:
         if self.file and self.fileUrl:
             raise ValueError("file and fileUrl should not be both set")
 
-        if self.file:
-            if not os.path.isabs(self.file):
-                self.file = "merge_data/" + self.file
+        if self.file and not os.path.isabs(self.file):
+            self.file = f"merge_data/{self.file}"
 
         if self.attribution and "{0}" in self.attribution:
             self.attribution_re = re.compile(self.attribution.replace("{0}", ".*"))
@@ -366,18 +365,21 @@ class Source:
 
         z = zipfile.ZipFile(f, 'r')
         print(z.namelist())
-        filename = next(filter(lambda zipinfo: fnmatch.fnmatch(zipinfo.filename, self.zip), z.infolist()))
-        return filename
+        return next(
+            filter(
+                lambda zipinfo: fnmatch.fnmatch(zipinfo.filename, self.zip),
+                z.infolist(),
+            )
+        )
 
     def time(self):
         if self.file:
             return int(os.path.getmtime(self.file)+.5)
         elif self.fileUrl:
-            if self.zipFile():
-                date_time = self.zipFile().date_time
-                return int(time.mktime(date_time + (0, 0, -1))+.5)
-            else:
+            if not self.zipFile():
                 return int(downloader.urlmtime(self.fileUrl, self.fileUrlCache, self.post)+.5)
+            date_time = self.zipFile().date_time
+            return int(time.mktime(date_time + (0, 0, -1))+.5)
 
     def path(self):
         if self.file:
@@ -422,8 +424,9 @@ class Source:
 
     def _get_millesime(self) -> Optional[str]:
         if not self.millesime and self.fileUrl:
-            cached_millesime = downloader.get_millesime(self.fileUrl, self.fileUrlCache, self.post)
-            if cached_millesime:
+            if cached_millesime := downloader.get_millesime(
+                self.fileUrl, self.fileUrlCache, self.post
+            ):
                 self.millesime = cached_millesime
             else:
                 self.millesime = self.get_millesime()
@@ -455,10 +458,10 @@ class SourceDataGouv(Source):
         self.dataset = dataset
         self.resource = resource
         self.data_gouv_api_base = data_gouv_api_base
-        kwargs.update({
+        kwargs |= {
             "fileUrl": data_gouv_dataset_base + resource,
             "millesime": None,
-        })
+        }
         super().__init__(**kwargs)
 
     def get_millesime(self) -> datetime.datetime:
@@ -484,10 +487,10 @@ class SourceOpenDataSoft(Source):
         if url_match is None:
             raise ValueError(f"Invalid url: {url}")
         self.base_url, self.dataset = url_match.groups()
-        kwargs.update({
+        kwargs |= {
             "fileUrl": f"{self.base_url}/explore/dataset/{self.dataset}/download/?format={format}&csv_separator=,&use_labels_for_header=true",
             "millesime": None,
-        })
+        }
         super().__init__(**kwargs)
 
     def get_millesime(self) -> datetime.datetime:
@@ -570,9 +573,10 @@ class CSV(Parser):
         osmosis.giscurs.copy_expert(copy, self.f)
 
         if self.fields:
-            osmosis.run0("CREATE TABLE {0}_fields AS SELECT {1} FROM {0}".format(
-                table,
-                ', '.join(map(lambda field: '"' + field + '"', self.fields)))
+            osmosis.run0(
+                "CREATE TABLE {0}_fields AS SELECT {1} FROM {0}".format(
+                    table, ', '.join(map(lambda field: f'"{field}"', self.fields))
+                )
             )
             osmosis.run0("DROP TABLE {0}".format(table))
             osmosis.run0("ALTER TABLE {0}_fields RENAME TO {0}".format(table))
@@ -605,7 +609,7 @@ def flattenjson(b):
         if isinstance( b[i], dict ):
             get = flattenjson(b[i])
             for j in get.keys():
-                val[ i + "." + j ] = get[j]
+                val[f"{i}.{j}"] = get[j]
         elif isinstance( b[i], list):
             val[i] = "[" + ",".join(map(str, b[i])) + "]"
         else:
@@ -670,8 +674,7 @@ class GeoJSON(Parser):
         for feature in self.json['features']:
             columns = columns.union(list(flattenjson(feature['properties']).keys()))
         columns = list(columns)
-        columns.append(u"geom_x")
-        columns.append(u"geom_y")
+        columns.extend((u"geom_x", u"geom_y"))
         return columns
 
     def import_(self, table, osmosis):
@@ -681,8 +684,7 @@ class GeoJSON(Parser):
                 row['properties'] = flattenjson(row['properties'])
                 columns = list(row['properties'].keys())
                 values = list(map(removequotesjson, map(lambda column: row['properties'][column], columns)))
-                columns.append(u"geom_x")
-                columns.append(u"geom_y")
+                columns.extend((u"geom_x", u"geom_y"))
                 if row['geometry']['type'] in ('Point', 'MultiPoint', 'LineString', 'MultiLineString'):
                     if row['geometry']['type'] == 'Point':
                         values.append(row['geometry']['coordinates'][0])
@@ -728,12 +730,20 @@ class GDAL(Parser):
             if self.zip:
                 # Resolve pattern filename into the zip archive.
                 z = zipfile.ZipFile(tmp_file.name, 'r')
-                info = next(filter(lambda zipinfo: fnmatch.fnmatch(zipinfo.filename, self.zip), z.infolist()))
-                if info:
+                if info := next(
+                    filter(
+                        lambda zipinfo: fnmatch.fnmatch(
+                            zipinfo.filename, self.zip
+                        ),
+                        z.infolist(),
+                    )
+                ):
                     self.zip = info.filename
 
             source_layer = [
-                ('/vsizip/' if self.zip else '' ) + tmp_file.name + (('/' + self.zip) if self.zip else ''),
+                ('/vsizip/' if self.zip else '')
+                + tmp_file.name
+                + (f'/{self.zip}' if self.zip else '')
             ]
             if self.layer:
                 source_layer.append(f"'{self.layer}'")
@@ -741,20 +751,11 @@ class GDAL(Parser):
             match = re.search('EPSG:([0-9]+)', subprocess.run(["gdalsrsinfo", "-e", source_layer[0]], stdout=subprocess.PIPE).stdout.decode('utf-8'))
             if not match and len(source_layer) >= 2:
                 match = re.search('EPSG:([0-9]+)', subprocess.run(["gdalsrsinfo", "-e", *source_layer], stdout=subprocess.PIPE).stdout.decode('utf-8'))
-            s_src = match.group(1)
+            s_src = match[1]
             wkt = PointInPolygon.PointInPolygon(self.polygon_id).polygon.as_simplified_wkt(s_src, self.srid()) if self.polygon_id else None
 
-            select = "-select '{}'".format(','.join(self.fields)) if self.fields else ''
-            gdal = "ogr2ogr -f PostgreSQL 'PG:{}' -lco SCHEMA={} -nln '{}' {} -lco OVERWRITE=yes -lco GEOMETRY_NAME=geom -lco OVERWRITE=YES -lco LAUNDER=NO -skipfailures {} -t_srs EPSG:{} '{}' {}".format(
-                osmosis.config.osmosis_manager.db_string,
-                osmosis.config.osmosis_manager.db_user,
-                table,
-                f"-clipsrc '{wkt}'" if wkt else '',
-                select,
-                self.proj,
-                source_layer[0],
-                source_layer[1] if len(source_layer) >= 2 else '',
-            )
+            select = f"-select '{','.join(self.fields)}'" if self.fields else ''
+            gdal = f"""ogr2ogr -f PostgreSQL 'PG:{osmosis.config.osmosis_manager.db_string}' -lco SCHEMA={osmosis.config.osmosis_manager.db_user} -nln '{table}' {f"-clipsrc '{wkt}'" if wkt else ''} -lco OVERWRITE=yes -lco GEOMETRY_NAME=geom -lco OVERWRITE=YES -lco LAUNDER=NO -skipfailures {select} -t_srs EPSG:{self.proj} '{source_layer[0]}' {source_layer[1] if len(source_layer) >= 2 else ''}"""
             print(gdal)
             if os.system(gdal):
                 raise Exception("ogr2ogr error")
@@ -809,15 +810,19 @@ class Load(object):
         osmosis.run("CREATE TABLE IF NOT EXISTS meta (name character varying(255) NOT NULL, update integer, bbox character varying(1024) )")
 
         # Official data table cache
-        country_hash = osmosis.config.db_schema.split('_')[-1][0:10] + hexastablehash(osmosis.config.db_schema)[-4:]
-        if len(default_table_base_name + '_' + country_hash) <= 63-2-3: # 63 max postgres relation name, 3 is index name prefix
-            tableOfficial = default_table_base_name + '_' + country_hash + "_o"
+        country_hash = (
+            osmosis.config.db_schema.split('_')[-1][:10]
+            + hexastablehash(osmosis.config.db_schema)[-4:]
+        )
+        if len(f'{default_table_base_name}_{country_hash}') <= 63 - 2 - 3: # 63 max postgres relation name, 3 is index name prefix
+            tableOfficial = f'{default_table_base_name}_{country_hash}_o'
         else:
-            tableOfficial = (default_table_base_name + '_' + country_hash)[-(63-2-3-4):] + '_o' + hexastablehash(default_table_base_name)[-4:]
+            tableOfficial = f"{f'{default_table_base_name}_{country_hash}'[-(63 - 2 - 3 - 4):]}_o{hexastablehash(default_table_base_name)[-4:]}"
 
         self.data = False
         def setData(res):
             self.data = res
+
         osmosis.run0("SELECT bbox FROM meta WHERE name='{0}' AND bbox IS NOT NULL AND update IS NOT NULL AND update={1}".format(tableOfficial, version), lambda res: setData(res))
 
         if not self.data:
@@ -858,7 +863,7 @@ class Load(object):
                 geom = self.geomFunction(res['_geom'])
                 res = {k: v for k, v in res.items() if k not in ['_geom', 'geom', 'geometry']}
                 if geom:
-                    for k in res.keys():
+                    for k in res:
                         try:
                             res[k] = mult_space.sub(' ', res[k].strip()) # Strip and remove duplicate space
                         except AttributeError:
@@ -871,6 +876,7 @@ class Load(object):
                         "tags1": tags[0],
                         "fields": dict(zip(dict(res).keys(), map(lambda s: (s is None and None) or u'{0}'.format(s), dict(res).values()))),
                     })
+
             if isinstance(self.geom, tuple):
                 self.geom = self.geom[0]
             else:
@@ -903,7 +909,7 @@ class Load(object):
         else:
             self.bbox = self.data[0]
 
-        if not (self.srid() and not self.bbox): # Abort condition
+        if not self.srid() or self.bbox: # Abort condition
             return tableOfficial
 
     @staticmethod
@@ -940,15 +946,8 @@ class Load_XY(Load):
         @param xFunction: lambda expression for convert x content column before reprojection, identity by default
         @param yFunction: lambda expression for convert y content column before reprojection, identity by default
         """
-        if isinstance(x, tuple):
-            x = x[0]
-        else:
-            x = "\"{0}\"".format(x)
-        if isinstance(y, tuple):
-            y = y[0]
-        else:
-            y = "\"{0}\"".format(y)
-
+        x = x[0] if isinstance(x, tuple) else "\"{0}\"".format(x)
+        y = y[0] if isinstance(y, tuple) else "\"{0}\"".format(y)
         self.xFunction = xFunction
         self.yFunction = yFunction
 
@@ -1034,28 +1033,26 @@ class Select:
             k_value = attribut_value.format(k)
             if v is False:
                 clauses.append(k_not_exists)
-            else:
-                if hasattr(v, '__call__'):
-                    clauses.append("NOT " + k_not_exists)
-                    clauses.append(v(k_value))
-                elif isinstance(v, list):
-                    cond = k_value + " IN ('{}')".format("', '".join(map(lambda i: i.replace("'", "''"), filter(lambda i: i is not False, v))))
-                    if False in v:
-                        cond = "(" + cond + " OR " + k_not_exists + ")"
-                    else:
-                        clauses.append("NOT " + k_not_exists)
-                    clauses.append(cond)
+            elif hasattr(v, '__call__'):
+                clauses.extend((f"NOT {k_not_exists}", v(k_value)))
+            elif isinstance(v, list):
+                cond = f"""{k_value} IN ('{"', '".join(map(lambda i: i.replace("'", "''"), filter(lambda i: i is not False, v)))}')"""
+                if False in v:
+                    cond = f"({cond} OR {k_not_exists})"
                 else:
-                    clauses.append("NOT " + k_not_exists)
-                    if v is None or v is True:
-                        pass
-                    elif isinstance(v, dict):
-                        if "like" in v:
-                            clauses.append(k_value + " LIKE '{}'".format(v["like"].replace("'", "''")))
-                        elif "regex" in v:
-                            clauses.append(k_value + " ~ '{}'".format(v["regex"].replace("'", "''")))
-                    else:
-                        clauses.append(k_value + " = '{}'".format(v.replace("'", "''")))
+                    clauses.append(f"NOT {k_not_exists}")
+                clauses.append(cond)
+            else:
+                clauses.append(f"NOT {k_not_exists}")
+                if v is None or v is True:
+                    pass
+                elif isinstance(v, dict):
+                    if "like" in v:
+                        clauses.append(f"""{k_value} LIKE '{v["like"].replace("'", "''")}'""")
+                    elif "regex" in v:
+                        clauses.append(f"""{k_value} ~ '{v["regex"].replace("'", "''")}'""")
+                else:
+                    clauses.append(f"""{k_value} = '{v.replace("'", "''")}'""")
         return " AND ".join(clauses) if clauses else "1=1"
 
 
@@ -1089,8 +1086,7 @@ class Mapping:
     def eval_staticGroup(self, static: MappingStatic, analyser):
         for tag, colomn in static.items():
             if callable(colomn):
-                r = colomn()
-                if r:
+                if r := colomn():
                     static[tag] = r
 
     def eval_static(self, analyser):
@@ -1103,8 +1099,7 @@ class Mapping:
         tags = dict(static)
         for tag, colomn in mapping.items():
             if callable(colomn):
-                r = colomn(res)
-                if r:
+                if r := colomn(res):
                     tags[tag] = r
             elif colomn and res[colomn]:
                 tags[tag] = res[colomn]
@@ -1278,9 +1273,7 @@ verification of this data.'''))
             if o in osm:
                 if official[o] == Mapping.delete_tag:
                     fix["-"].append(o)
-                elif osm[o] == official[o]:
-                    pass
-                else:
+                elif osm[o] != official[o]:
                     if o == "source":
                         if self.parser.source.attribution:
                             for s in osm[o].split(";"):
@@ -1288,20 +1281,24 @@ verification of this data.'''))
                                     fix["~"][o] = osm[o].replace(s, self.parser.source.as_tag_value())
                                     break
                         else:
-                            fix["~"][o] = osm[o]+";"+official[o]
+                            fix["~"][o] = f"{osm[o]};{official[o]}"
                     else:
                         fix["~"][o] = official[o]
-            else:
-                if official[o] != Mapping.delete_tag:
-                    fix["+"][o] = official[o]
+            elif official[o] != Mapping.delete_tag:
+                fix["+"][o] = official[o]
         for k in [ref] + keep_multiple:
             if fix["~"].get(k) and osm.get(k):
                 if fix["~"][k] not in osm[k].split(";"):
-                    fix["~"][k] = osm[k] + ";" + fix["~"][k] # Append new value to the list
+                    fix["~"][k] = f"{osm[k]};" + fix["~"][k]
                 else:
                     del fix["~"][k] # Value already in the list, change nothing
         keys = [s for s in (list(fix["+"].keys()) + list(fix["~"].keys())) if s != "name" and not s.startswith("source")]
-        if "name" in osm and "name" in official and osm["name"] != official["name"] and len(keys) != 0:
+        if (
+            "name" in osm
+            and "name" in official
+            and osm["name"] != official["name"]
+            and keys
+        ):
             fix0 = {"+": fix["+"], "~": dict(fix["~"])}
             del fix0["~"]["name"]
             fix = [fix0, fix]
@@ -1315,7 +1312,7 @@ class Analyser_Merge_Point(Analyser_Merge):
 
     def def_class_missing_osm(self, **kwargs):
         doc = self.doc_master
-        kwargs.update(self.merge_docs(doc, **kwargs))
+        kwargs |= self.merge_docs(doc, **kwargs)
         self.missing_osm = self.def_class(back_in_stack = 3, **kwargs)
 
     def def_class_possible_merge(self, **kwargs):
@@ -1328,7 +1325,7 @@ OpenStreetMap.'''))
 
     def def_class_moved_official(self, **kwargs):
         doc = self.doc_master
-        kwargs.update(self.merge_docs(doc, **kwargs))
+        kwargs |= self.merge_docs(doc, **kwargs)
         self.moved_official = self.def_class(back_in_stack = 3, **kwargs)
 
     def def_class_update_official(self, **kwargs):
@@ -1403,7 +1400,7 @@ open data and OSM.'''))
             count_missing_official = 0
             def ret(res):
                 nonlocal count_missing_official
-                count_missing_official = count_missing_official + 1
+                count_missing_official += 1
                 return {
                     "class": self.missing_official['id'],
                     "subclass": str(stablehash64("{0}{1}{2}".format(
@@ -1414,6 +1411,7 @@ open data and OSM.'''))
                     "text": self.conflate.mapping.text(defaultdict(lambda:None,res[2]), defaultdict(lambda:None,res[3])),
                     "fix": self.passTags(res[2]) if res[2] != {} else None,
                 }
+
             self.run(sql12, ret)
 
         count_missing_osm = None
@@ -1426,22 +1424,24 @@ open data and OSM.'''))
                 count_missing_osm = 0
                 def ret_missing(res):
                     nonlocal count_missing_osm
-                    count_missing_osm = count_missing_osm + 1
+                    count_missing_osm += 1
                     return {
                         "class": self.missing_osm['id'],
                         "data": [self.typeMapping[res[1]], None, self.positionAsText]
                     }
+
                 self.run(sql22, ret_missing)
                 # Invalid OSM
                 count_invalid_osm_ref = 0
                 def ret_invalid(res):
                     nonlocal count_invalid_osm_ref
-                    count_invalid_osm_ref = count_invalid_osm_ref + 1
+                    count_invalid_osm_ref += 1
                     return {
                         "class": self.missing_osm['id'],
                         "subclass": str(stablehash64(res[5])) if self.conflate.osmRef != "NULL" else None,
                         "data": [self.typeMapping[res[1]], None, self.positionAsText]
                     }
+
                 self.run(sql23.format(official = table, joinClause = joinClause), ret_invalid)
 
             # Possible merge
@@ -1458,7 +1458,7 @@ open data and OSM.'''))
                 count_possible_merge = 0
                 def ret(res):
                     nonlocal count_possible_merge
-                    count_possible_merge = count_possible_merge + 1
+                    count_possible_merge += 1
                     return {
                         "class": self.possible_merge['id'],
                         "subclass": str(stablehash64("{0}{1}".format(
@@ -1468,15 +1468,25 @@ open data and OSM.'''))
                         "text": self.conflate.mapping.text(defaultdict(lambda:None,res[3]), defaultdict(lambda:None,res[4])),
                         "fix": self.mergeTags(res[5], res[3], self.conflate.osmRef, self.conflate.tag_keep_multiple_values),
                     }
+
                 self.run(sql30.format(joinClause = possible_merge_joinClause, orderBy = possible_merge_orderBy), ret)
 
-            self.dumpCSV("SELECT ST_X(geom::geometry) AS lon, ST_Y(geom::geometry) AS lat, tags FROM {0}".format(table), "", ["lon","lat"], lambda r, cc:
-                list((r['lon'], r['lat'])) + cc
+            self.dumpCSV(
+                "SELECT ST_X(geom::geometry) AS lon, ST_Y(geom::geometry) AS lat, tags FROM {0}".format(
+                    table
+                ),
+                "",
+                ["lon", "lat"],
+                lambda r, cc: [r['lon'], r['lat']] + cc,
             )
 
             self.run(sql40.format(official = table, joinClause = joinClause))
-            self.dumpCSV(sql41, ".byOSM", ["osm_id","osm_type","lon","lat"], lambda r, cc:
-                list((r['osm_id'], r['osm_type'], r['lon'], r['lat'])) + cc
+            self.dumpCSV(
+                sql41,
+                ".byOSM",
+                ["osm_id", "osm_type", "lon", "lat"],
+                lambda r, cc: [r['osm_id'], r['osm_type'], r['lon'], r['lat']]
+                + cc,
             )
 
             file = io.open("{0}/{1}.metainfo.csv".format(self.config.dst_dir, self.name), "w", encoding="utf8")

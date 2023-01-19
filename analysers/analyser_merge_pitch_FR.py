@@ -34,10 +34,9 @@ class Analyser_Merge_Pitch_FR(Analyser_Merge_Dynamic):
         with open("merge_data/pitch_FR.mapping.csv") as mappingfile:
             spamreader = csv.reader(mappingfile)
             for row in spamreader:
-                classs, topic = row[0:2]
+                classs, topic = row[:2]
                 tags = list(map(lambda t: t.split('=') if t else None, row[2:5]))
-                osmTags = dict(filter(lambda t: t, tags[0:2]))
-                if len(osmTags) > 0:
+                if osmTags := dict(filter(lambda t: t, tags[:2])):
                     defaultTags = dict(filter(lambda t: t, tags[2:3]))
                     self.classFactory(SubAnalyser_Merge_Pitch_FR, classs, classs, topic, osmTags, defaultTags)
 

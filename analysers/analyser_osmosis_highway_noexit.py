@@ -112,9 +112,11 @@ class Test(TestAnalyserOsmosis):
     def setup_class(cls):
         from modules import config
         TestAnalyserOsmosis.setup_class()
-        cls.analyser_conf = cls.load_osm("tests/osmosis_noexit.test.osm",
-                                         config.dir_tmp + "/tests/osmosis_noexit.test.xml",
-                                         {"proj": 2969})
+        cls.analyser_conf = cls.load_osm(
+            "tests/osmosis_noexit.test.osm",
+            f"{config.dir_tmp}/tests/osmosis_noexit.test.xml",
+            {"proj": 2969},
+        )
 
     def test(self):
         with Analyser_Osmosis_Highway_Noexit(self.analyser_conf, self.logger) as a:

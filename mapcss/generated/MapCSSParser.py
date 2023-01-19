@@ -465,45 +465,45 @@ class MapCSSParser ( Parser ):
 
     def rule_(self):
 
-        localctx = MapCSSParser.Rule_Context(self, self._ctx, self.state)
-        self.enterRule(localctx, 4, self.RULE_rule_)
-        self._la = 0 # Token type
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 78
-            self.selector()
-            self.state = 83
-            self._errHandler.sync(self)
-            _alt = self._interp.adaptivePredict(self._input,1,self._ctx)
-            while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
-                if _alt==1:
-                    self.state = 79
-                    self.match(MapCSSParser.COMMA)
-                    self.state = 80
-                    self.selector() 
-                self.state = 85
-                self._errHandler.sync(self)
-                _alt = self._interp.adaptivePredict(self._input,1,self._ctx)
+    	localctx = MapCSSParser.Rule_Context(self, self._ctx, self.state)
+    	self.enterRule(localctx, 4, self.RULE_rule_)
+    	self._la = 0 # Token type
+    	try:
+    		self.enterOuterAlt(localctx, 1)
+    		self.state = 78
+    		self.selector()
+    		self.state = 83
+    		self._errHandler.sync(self)
+    		_alt = self._interp.adaptivePredict(self._input,1,self._ctx)
+    		while _alt not in [2, ATN.INVALID_ALT_NUMBER]:
+    			if _alt==1:
+    			    self.state = 79
+    			    self.match(MapCSSParser.COMMA)
+    			    self.state = 80
+    			    self.selector() 
+    			self.state = 85
+    			self._errHandler.sync(self)
+    			_alt = self._interp.adaptivePredict(self._input,1,self._ctx)
 
-            self.state = 89
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            while _la==MapCSSParser.COMMA:
-                self.state = 86
-                self.match(MapCSSParser.COMMA)
-                self.state = 91
-                self._errHandler.sync(self)
-                _la = self._input.LA(1)
+    		self.state = 89
+    		self._errHandler.sync(self)
+    		_la = self._input.LA(1)
+    		while _la==MapCSSParser.COMMA:
+    		    self.state = 86
+    		    self.match(MapCSSParser.COMMA)
+    		    self.state = 91
+    		    self._errHandler.sync(self)
+    		    _la = self._input.LA(1)
 
-            self.state = 92
-            self.declaration_block()
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    		self.state = 92
+    		self.declaration_block()
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class SelectorContext(ParserRuleContext):
@@ -557,77 +557,66 @@ class MapCSSParser ( Parser ):
 
     def selector(self):
 
-        localctx = MapCSSParser.SelectorContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 6, self.RULE_selector)
-        self._la = 0 # Token type
-        try:
-            self.state = 113
-            self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,5,self._ctx)
-            if la_ == 1:
-                self.enterOuterAlt(localctx, 1)
-                self.state = 94
-                self.simple_selector()
-                pass
+    	localctx = MapCSSParser.SelectorContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 6, self.RULE_selector)
+    	self._la = 0 # Token type
+    	try:
+    		self.state = 113
+    		self._errHandler.sync(self)
+    		la_ = self._interp.adaptivePredict(self._input,5,self._ctx)
+    		if la_ == 1:
+    			self.enterOuterAlt(localctx, 1)
+    			self.state = 94
+    			self.simple_selector()
+    		elif la_ == 2:
+    			self.enterOuterAlt(localctx, 2)
+    			self.state = 95
+    			self.simple_selector()
+    			self.state = 96
+    			self.simple_selector()
+    		elif la_ == 3:
+    			self.enterOuterAlt(localctx, 3)
+    			self.state = 98
+    			self.simple_selector()
+    			self.state = 99
+    			self.match(MapCSSParser.OP_GT)
+    			self.state = 104
+    			self._errHandler.sync(self)
+    			_la = self._input.LA(1)
+    			while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << MapCSSParser.OP_NOT) | (1 << MapCSSParser.LBRACKET) | (1 << MapCSSParser.COLON))) != 0):
+    				self.state = 102
+    				self._errHandler.sync(self)
+    				token = self._input.LA(1)
+    				if token in [MapCSSParser.LBRACKET]:
+    					self.state = 100
+    					self.link_selector()
+    				elif token in [MapCSSParser.OP_NOT, MapCSSParser.COLON]:
+    					self.state = 101
+    					self.pseudo_class_selector()
+    				else:
+    					raise NoViableAltException(self)
 
-            elif la_ == 2:
-                self.enterOuterAlt(localctx, 2)
-                self.state = 95
-                self.simple_selector()
-                self.state = 96
-                self.simple_selector()
-                pass
+    				self.state = 106
+    				self._errHandler.sync(self)
+    				_la = self._input.LA(1)
 
-            elif la_ == 3:
-                self.enterOuterAlt(localctx, 3)
-                self.state = 98
-                self.simple_selector()
-                self.state = 99
-                self.match(MapCSSParser.OP_GT)
-                self.state = 104
-                self._errHandler.sync(self)
-                _la = self._input.LA(1)
-                while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << MapCSSParser.OP_NOT) | (1 << MapCSSParser.LBRACKET) | (1 << MapCSSParser.COLON))) != 0):
-                    self.state = 102
-                    self._errHandler.sync(self)
-                    token = self._input.LA(1)
-                    if token in [MapCSSParser.LBRACKET]:
-                        self.state = 100
-                        self.link_selector()
-                        pass
-                    elif token in [MapCSSParser.OP_NOT, MapCSSParser.COLON]:
-                        self.state = 101
-                        self.pseudo_class_selector()
-                        pass
-                    else:
-                        raise NoViableAltException(self)
-
-                    self.state = 106
-                    self._errHandler.sync(self)
-                    _la = self._input.LA(1)
-
-                self.state = 107
-                self.simple_selector()
-                pass
-
-            elif la_ == 4:
-                self.enterOuterAlt(localctx, 4)
-                self.state = 109
-                self.simple_selector()
-                self.state = 110
-                self.simple_selector_operator()
-                self.state = 111
-                self.simple_selector()
-                pass
-
-
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    			self.state = 107
+    			self.simple_selector()
+    		elif la_ == 4:
+    			self.enterOuterAlt(localctx, 4)
+    			self.state = 109
+    			self.simple_selector()
+    			self.state = 110
+    			self.simple_selector_operator()
+    			self.state = 111
+    			self.simple_selector()
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class Simple_selector_operatorContext(ParserRuleContext):
@@ -674,25 +663,33 @@ class MapCSSParser ( Parser ):
 
     def simple_selector_operator(self):
 
-        localctx = MapCSSParser.Simple_selector_operatorContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 8, self.RULE_simple_selector_operator)
-        self._la = 0 # Token type
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 115
-            _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << MapCSSParser.OP_INCLUDED_IN) | (1 << MapCSSParser.OP_INTERSECTS) | (1 << MapCSSParser.OP_SUBSET) | (1 << MapCSSParser.OP_SUPERSET) | (1 << MapCSSParser.OP_NOSUBSET) | (1 << MapCSSParser.OP_NOSUPERSET) | (1 << MapCSSParser.OP_LT))) != 0)):
-                self._errHandler.recoverInline(self)
-            else:
-                self._errHandler.reportMatch(self)
-                self.consume()
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    	localctx = MapCSSParser.Simple_selector_operatorContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 8, self.RULE_simple_selector_operator)
+    	self._la = 0 # Token type
+    	try:
+    		self.enterOuterAlt(localctx, 1)
+    		self.state = 115
+    		_la = self._input.LA(1)
+    		if (_la) & ~0x3F != 0 or (1 << _la) & (
+    			(1 << MapCSSParser.OP_INCLUDED_IN)
+    			| (1 << MapCSSParser.OP_INTERSECTS)
+    			| (1 << MapCSSParser.OP_SUBSET)
+    			| (1 << MapCSSParser.OP_SUPERSET)
+    			| (1 << MapCSSParser.OP_NOSUBSET)
+    			| (1 << MapCSSParser.OP_NOSUPERSET)
+    			| (1 << MapCSSParser.OP_LT)
+    		) == 0:
+    			self._errHandler.recoverInline(self)
+    		else:
+    			self._errHandler.reportMatch(self)
+    			self.consume()
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class Link_selectorContext(ParserRuleContext):
@@ -745,48 +742,43 @@ class MapCSSParser ( Parser ):
 
     def link_selector(self):
 
-        localctx = MapCSSParser.Link_selectorContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 10, self.RULE_link_selector)
-        try:
-            self.state = 129
-            self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,6,self._ctx)
-            if la_ == 1:
-                self.enterOuterAlt(localctx, 1)
-                self.state = 117
-                self.match(MapCSSParser.LBRACKET)
-                self.state = 118
-                self.cssident()
-                self.state = 119
-                self.valueOperator()
-                self.state = 120
-                self.valueExpression(0)
-                self.state = 121
-                self.match(MapCSSParser.RBRACKET)
-                pass
-
-            elif la_ == 2:
-                self.enterOuterAlt(localctx, 2)
-                self.state = 123
-                self.match(MapCSSParser.LBRACKET)
-                self.state = 124
-                self.cssident()
-                self.state = 125
-                self.numericOperator()
-                self.state = 126
-                localctx.v = self.int_()
-                self.state = 127
-                self.match(MapCSSParser.RBRACKET)
-                pass
-
-
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    	localctx = MapCSSParser.Link_selectorContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 10, self.RULE_link_selector)
+    	try:
+    		self.state = 129
+    		self._errHandler.sync(self)
+    		la_ = self._interp.adaptivePredict(self._input,6,self._ctx)
+    		if la_ == 1:
+    			self.enterOuterAlt(localctx, 1)
+    			self.state = 117
+    			self.match(MapCSSParser.LBRACKET)
+    			self.state = 118
+    			self.cssident()
+    			self.state = 119
+    			self.valueOperator()
+    			self.state = 120
+    			self.valueExpression(0)
+    			self.state = 121
+    			self.match(MapCSSParser.RBRACKET)
+    		elif la_ == 2:
+    			self.enterOuterAlt(localctx, 2)
+    			self.state = 123
+    			self.match(MapCSSParser.LBRACKET)
+    			self.state = 124
+    			self.cssident()
+    			self.state = 125
+    			self.numericOperator()
+    			self.state = 126
+    			localctx.v = self.int_()
+    			self.state = 127
+    			self.match(MapCSSParser.RBRACKET)
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class Layer_id_selectorContext(ParserRuleContext):
@@ -901,61 +893,52 @@ class MapCSSParser ( Parser ):
 
     def simple_selector(self):
 
-        localctx = MapCSSParser.Simple_selectorContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 14, self.RULE_simple_selector)
-        self._la = 0 # Token type
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 135
-            self.type_selector()
-            self.state = 142
-            self._errHandler.sync(self)
-            _alt = self._interp.adaptivePredict(self._input,8,self._ctx)
-            while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
-                if _alt==1:
-                    self.state = 140
-                    self._errHandler.sync(self)
-                    la_ = self._interp.adaptivePredict(self._input,7,self._ctx)
-                    if la_ == 1:
-                        self.state = 136
-                        self.zoom_selector()
-                        pass
+    	localctx = MapCSSParser.Simple_selectorContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 14, self.RULE_simple_selector)
+    	self._la = 0 # Token type
+    	try:
+    		self.enterOuterAlt(localctx, 1)
+    		self.state = 135
+    		self.type_selector()
+    		self.state = 142
+    		self._errHandler.sync(self)
+    		_alt = self._interp.adaptivePredict(self._input,8,self._ctx)
+    		while _alt not in [2, ATN.INVALID_ALT_NUMBER]:
+    			if _alt==1:
+    				self.state = 140
+    				self._errHandler.sync(self)
+    				la_ = self._interp.adaptivePredict(self._input,7,self._ctx)
+    				if la_ == 1:
+    					self.state = 136
+    					self.zoom_selector()
+    				elif la_ == 2:
+    					self.state = 137
+    					self.class_selector()
+    				elif la_ == 3:
+    					self.state = 138
+    					self.attribute_selector()
+    				elif la_ == 4:
+    					self.state = 139
+    					self.pseudo_class_selector()
+    			self.state = 144
+    			self._errHandler.sync(self)
+    			_alt = self._interp.adaptivePredict(self._input,8,self._ctx)
 
-                    elif la_ == 2:
-                        self.state = 137
-                        self.class_selector()
-                        pass
-
-                    elif la_ == 3:
-                        self.state = 138
-                        self.attribute_selector()
-                        pass
-
-                    elif la_ == 4:
-                        self.state = 139
-                        self.pseudo_class_selector()
-                        pass
-
-             
-                self.state = 144
-                self._errHandler.sync(self)
-                _alt = self._interp.adaptivePredict(self._input,8,self._ctx)
-
-            self.state = 146
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            if _la==MapCSSParser.COLON:
-                self.state = 145
-                self.layer_id_selector()
+    		self.state = 146
+    		self._errHandler.sync(self)
+    		_la = self._input.LA(1)
+    		if _la==MapCSSParser.COLON:
+    		    self.state = 145
+    		    self.layer_id_selector()
 
 
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class Zoom_selectorContext(ParserRuleContext):
@@ -1028,25 +1011,25 @@ class MapCSSParser ( Parser ):
 
     def quoted(self):
 
-        localctx = MapCSSParser.QuotedContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 18, self.RULE_quoted)
-        self._la = 0 # Token type
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 150
-            _la = self._input.LA(1)
-            if not(_la==MapCSSParser.DQUOTED_STRING or _la==MapCSSParser.SQUOTED_STRING):
-                self._errHandler.recoverInline(self)
-            else:
-                self._errHandler.reportMatch(self)
-                self.consume()
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    	localctx = MapCSSParser.QuotedContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 18, self.RULE_quoted)
+    	self._la = 0 # Token type
+    	try:
+    		self.enterOuterAlt(localctx, 1)
+    		self.state = 150
+    		_la = self._input.LA(1)
+    		if _la not in [MapCSSParser.DQUOTED_STRING, MapCSSParser.SQUOTED_STRING]:
+    			self._errHandler.recoverInline(self)
+    		else:
+    			self._errHandler.reportMatch(self)
+    			self.consume()
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class CssidentContext(ParserRuleContext):
@@ -1146,46 +1129,46 @@ class MapCSSParser ( Parser ):
 
     def osmtag(self):
 
-        localctx = MapCSSParser.OsmtagContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 22, self.RULE_osmtag)
-        self._la = 0 # Token type
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 158
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            if _la==MapCSSParser.OP_MINUS:
-                self.state = 157
-                self.match(MapCSSParser.OP_MINUS)
+    	localctx = MapCSSParser.OsmtagContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 22, self.RULE_osmtag)
+    	self._la = 0 # Token type
+    	try:
+    		self.enterOuterAlt(localctx, 1)
+    		self.state = 158
+    		self._errHandler.sync(self)
+    		_la = self._input.LA(1)
+    		if _la==MapCSSParser.OP_MINUS:
+    		    self.state = 157
+    		    self.match(MapCSSParser.OP_MINUS)
 
 
-            self.state = 160
-            self.match(MapCSSParser.NCOMPONENT)
-            self.state = 165
-            self._errHandler.sync(self)
-            _alt = self._interp.adaptivePredict(self._input,12,self._ctx)
-            while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
-                if _alt==1:
-                    self.state = 161
-                    _la = self._input.LA(1)
-                    if not(_la==MapCSSParser.DOT or _la==MapCSSParser.COLON):
-                        self._errHandler.recoverInline(self)
-                    else:
-                        self._errHandler.reportMatch(self)
-                        self.consume()
-                    self.state = 162
-                    self.match(MapCSSParser.NCOMPONENT) 
-                self.state = 167
-                self._errHandler.sync(self)
-                _alt = self._interp.adaptivePredict(self._input,12,self._ctx)
+    		self.state = 160
+    		self.match(MapCSSParser.NCOMPONENT)
+    		self.state = 165
+    		self._errHandler.sync(self)
+    		_alt = self._interp.adaptivePredict(self._input,12,self._ctx)
+    		while _alt not in [2, ATN.INVALID_ALT_NUMBER]:
+    			if _alt==1:
+    				self.state = 161
+    				_la = self._input.LA(1)
+    				if _la not in [MapCSSParser.DOT, MapCSSParser.COLON]:
+    					self._errHandler.recoverInline(self)
+    				else:
+    					self._errHandler.reportMatch(self)
+    					self.consume()
+    				self.state = 162
+    				self.match(MapCSSParser.NCOMPONENT)
+    			self.state = 167
+    			self._errHandler.sync(self)
+    			_alt = self._interp.adaptivePredict(self._input,12,self._ctx)
 
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class Attribute_selectorContext(ParserRuleContext):
@@ -1271,32 +1254,27 @@ class MapCSSParser ( Parser ):
 
     def predicate(self):
 
-        localctx = MapCSSParser.PredicateContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 26, self.RULE_predicate)
-        try:
-            self.state = 174
-            self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,13,self._ctx)
-            if la_ == 1:
-                self.enterOuterAlt(localctx, 1)
-                self.state = 172
-                self.predicate_simple()
-                pass
-
-            elif la_ == 2:
-                self.enterOuterAlt(localctx, 2)
-                self.state = 173
-                self.booleanExpression(0)
-                pass
-
-
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    	localctx = MapCSSParser.PredicateContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 26, self.RULE_predicate)
+    	try:
+    		self.state = 174
+    		self._errHandler.sync(self)
+    		la_ = self._interp.adaptivePredict(self._input,13,self._ctx)
+    		if la_ == 1:
+    			self.enterOuterAlt(localctx, 1)
+    			self.state = 172
+    			self.predicate_simple()
+    		elif la_ == 2:
+    			self.enterOuterAlt(localctx, 2)
+    			self.state = 173
+    			self.booleanExpression(0)
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class Predicate_simpleContext(ParserRuleContext):
@@ -1343,74 +1321,70 @@ class MapCSSParser ( Parser ):
 
     def predicate_simple(self):
 
-        localctx = MapCSSParser.Predicate_simpleContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 28, self.RULE_predicate_simple)
-        self._la = 0 # Token type
-        try:
-            self.state = 190
-            self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,18,self._ctx)
-            if la_ == 1:
-                self.enterOuterAlt(localctx, 1)
-                self.state = 177
-                self._errHandler.sync(self)
-                _la = self._input.LA(1)
-                if _la==MapCSSParser.OP_NOT:
-                    self.state = 176
-                    self.match(MapCSSParser.OP_NOT)
+    	localctx = MapCSSParser.Predicate_simpleContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 28, self.RULE_predicate_simple)
+    	self._la = 0 # Token type
+    	try:
+    		self.state = 190
+    		self._errHandler.sync(self)
+    		la_ = self._interp.adaptivePredict(self._input,18,self._ctx)
+    		if la_ == 1:
+    			self.enterOuterAlt(localctx, 1)
+    			self.state = 177
+    			self._errHandler.sync(self)
+    			_la = self._input.LA(1)
+    			if _la==MapCSSParser.OP_NOT:
+    			    self.state = 176
+    			    self.match(MapCSSParser.OP_NOT)
 
 
-                self.state = 181
-                self._errHandler.sync(self)
-                token = self._input.LA(1)
-                if token in [MapCSSParser.OP_MINUS, MapCSSParser.NCOMPONENT]:
-                    self.state = 179
-                    self.osmtag()
-                    pass
-                elif token in [MapCSSParser.DQUOTED_STRING, MapCSSParser.SQUOTED_STRING]:
-                    self.state = 180
-                    self.quoted()
-                    pass
-                else:
-                    raise NoViableAltException(self)
+    			self.state = 181
+    			self._errHandler.sync(self)
+    			token = self._input.LA(1)
+    			if token in [MapCSSParser.OP_MINUS, MapCSSParser.NCOMPONENT]:
+    				self.state = 179
+    				self.osmtag()
+    			elif token in [MapCSSParser.DQUOTED_STRING, MapCSSParser.SQUOTED_STRING]:
+    				self.state = 180
+    				self.quoted()
+    			else:
+    				raise NoViableAltException(self)
 
-                self.state = 184
-                self._errHandler.sync(self)
-                _la = self._input.LA(1)
-                if _la==MapCSSParser.QUESTION_MARK or _la==MapCSSParser.QUESTION_MARK_NEGATED:
-                    self.state = 183
-                    _la = self._input.LA(1)
-                    if not(_la==MapCSSParser.QUESTION_MARK or _la==MapCSSParser.QUESTION_MARK_NEGATED):
-                        self._errHandler.recoverInline(self)
-                    else:
-                        self._errHandler.reportMatch(self)
-                        self.consume()
-
-
-                pass
-
-            elif la_ == 2:
-                self.enterOuterAlt(localctx, 2)
-                self.state = 187
-                self._errHandler.sync(self)
-                _la = self._input.LA(1)
-                if _la==MapCSSParser.OP_NOT:
-                    self.state = 186
-                    self.match(MapCSSParser.OP_NOT)
+    			self.state = 184
+    			self._errHandler.sync(self)
+    			_la = self._input.LA(1)
+    			if _la in [MapCSSParser.QUESTION_MARK, MapCSSParser.QUESTION_MARK_NEGATED]:
+    				self.state = 183
+    				_la = self._input.LA(1)
+    				if _la not in [
+    					MapCSSParser.QUESTION_MARK,
+    					MapCSSParser.QUESTION_MARK_NEGATED,
+    				]:
+    					self._errHandler.recoverInline(self)
+    				else:
+    					self._errHandler.reportMatch(self)
+    					self.consume()
 
 
-                self.state = 189
-                self.regexExpression()
-                pass
+    		elif la_ == 2:
+    			self.enterOuterAlt(localctx, 2)
+    			self.state = 187
+    			self._errHandler.sync(self)
+    			_la = self._input.LA(1)
+    			if _la==MapCSSParser.OP_NOT:
+    			    self.state = 186
+    			    self.match(MapCSSParser.OP_NOT)
 
 
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    			self.state = 189
+    			self.regexExpression()
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class Class_selectorContext(ParserRuleContext):
@@ -1446,38 +1420,36 @@ class MapCSSParser ( Parser ):
 
     def class_selector(self):
 
-        localctx = MapCSSParser.Class_selectorContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 30, self.RULE_class_selector)
-        try:
-            self.state = 197
-            self._errHandler.sync(self)
-            token = self._input.LA(1)
-            if token in [MapCSSParser.OP_NOT]:
-                self.enterOuterAlt(localctx, 1)
-                self.state = 192
-                self.match(MapCSSParser.OP_NOT)
-                self.state = 193
-                self.match(MapCSSParser.DOT)
-                self.state = 194
-                self.cssident()
-                pass
-            elif token in [MapCSSParser.DOT]:
-                self.enterOuterAlt(localctx, 2)
-                self.state = 195
-                self.match(MapCSSParser.DOT)
-                self.state = 196
-                self.cssident()
-                pass
-            else:
-                raise NoViableAltException(self)
+    	localctx = MapCSSParser.Class_selectorContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 30, self.RULE_class_selector)
+    	try:
+    		self.state = 197
+    		self._errHandler.sync(self)
+    		token = self._input.LA(1)
+    		if token in [MapCSSParser.OP_NOT]:
+    			self.enterOuterAlt(localctx, 1)
+    			self.state = 192
+    			self.match(MapCSSParser.OP_NOT)
+    			self.state = 193
+    			self.match(MapCSSParser.DOT)
+    			self.state = 194
+    			self.cssident()
+    		elif token in [MapCSSParser.DOT]:
+    			self.enterOuterAlt(localctx, 2)
+    			self.state = 195
+    			self.match(MapCSSParser.DOT)
+    			self.state = 196
+    			self.cssident()
+    		else:
+    			raise NoViableAltException(self)
 
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class Pseudo_class_selectorContext(ParserRuleContext):
@@ -1513,48 +1485,41 @@ class MapCSSParser ( Parser ):
 
     def pseudo_class_selector(self):
 
-        localctx = MapCSSParser.Pseudo_class_selectorContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 32, self.RULE_pseudo_class_selector)
-        try:
-            self.state = 207
-            self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,20,self._ctx)
-            if la_ == 1:
-                self.enterOuterAlt(localctx, 1)
-                self.state = 199
-                self.match(MapCSSParser.COLON)
-                self.state = 200
-                self.match(MapCSSParser.OP_NOT)
-                self.state = 201
-                self.cssident()
-                pass
-
-            elif la_ == 2:
-                self.enterOuterAlt(localctx, 2)
-                self.state = 202
-                self.match(MapCSSParser.OP_NOT)
-                self.state = 203
-                self.match(MapCSSParser.COLON)
-                self.state = 204
-                self.cssident()
-                pass
-
-            elif la_ == 3:
-                self.enterOuterAlt(localctx, 3)
-                self.state = 205
-                self.match(MapCSSParser.COLON)
-                self.state = 206
-                self.cssident()
-                pass
-
-
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    	localctx = MapCSSParser.Pseudo_class_selectorContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 32, self.RULE_pseudo_class_selector)
+    	try:
+    		self.state = 207
+    		self._errHandler.sync(self)
+    		la_ = self._interp.adaptivePredict(self._input,20,self._ctx)
+    		if la_ == 1:
+    			self.enterOuterAlt(localctx, 1)
+    			self.state = 199
+    			self.match(MapCSSParser.COLON)
+    			self.state = 200
+    			self.match(MapCSSParser.OP_NOT)
+    			self.state = 201
+    			self.cssident()
+    		elif la_ == 2:
+    			self.enterOuterAlt(localctx, 2)
+    			self.state = 202
+    			self.match(MapCSSParser.OP_NOT)
+    			self.state = 203
+    			self.match(MapCSSParser.COLON)
+    			self.state = 204
+    			self.cssident()
+    		elif la_ == 3:
+    			self.enterOuterAlt(localctx, 3)
+    			self.state = 205
+    			self.match(MapCSSParser.COLON)
+    			self.state = 206
+    			self.cssident()
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class Type_selectorContext(ParserRuleContext):
@@ -1587,32 +1552,30 @@ class MapCSSParser ( Parser ):
 
     def type_selector(self):
 
-        localctx = MapCSSParser.Type_selectorContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 34, self.RULE_type_selector)
-        try:
-            self.state = 211
-            self._errHandler.sync(self)
-            token = self._input.LA(1)
-            if token in [MapCSSParser.OP_MINUS, MapCSSParser.NCOMPONENT]:
-                self.enterOuterAlt(localctx, 1)
-                self.state = 209
-                self.cssident()
-                pass
-            elif token in [MapCSSParser.OP_MUL]:
-                self.enterOuterAlt(localctx, 2)
-                self.state = 210
-                self.match(MapCSSParser.OP_MUL)
-                pass
-            else:
-                raise NoViableAltException(self)
+    	localctx = MapCSSParser.Type_selectorContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 34, self.RULE_type_selector)
+    	try:
+    		self.state = 211
+    		self._errHandler.sync(self)
+    		token = self._input.LA(1)
+    		if token in [MapCSSParser.OP_MINUS, MapCSSParser.NCOMPONENT]:
+    			self.enterOuterAlt(localctx, 1)
+    			self.state = 209
+    			self.cssident()
+    		elif token in [MapCSSParser.OP_MUL]:
+    			self.enterOuterAlt(localctx, 2)
+    			self.state = 210
+    			self.match(MapCSSParser.OP_MUL)
+    		else:
+    			raise NoViableAltException(self)
 
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class Declaration_blockContext(ParserRuleContext):
@@ -1649,38 +1612,33 @@ class MapCSSParser ( Parser ):
 
     def declaration_block(self):
 
-        localctx = MapCSSParser.Declaration_blockContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 36, self.RULE_declaration_block)
-        try:
-            self.state = 219
-            self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,22,self._ctx)
-            if la_ == 1:
-                self.enterOuterAlt(localctx, 1)
-                self.state = 213
-                localctx.l = self.match(MapCSSParser.LBRACE)
-                self.state = 214
-                self.declarations()
-                self.state = 215
-                self.match(MapCSSParser.RBRACE)
-                pass
-
-            elif la_ == 2:
-                self.enterOuterAlt(localctx, 2)
-                self.state = 217
-                localctx.l = self.match(MapCSSParser.LBRACE)
-                self.state = 218
-                self.match(MapCSSParser.RBRACE)
-                pass
-
-
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    	localctx = MapCSSParser.Declaration_blockContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 36, self.RULE_declaration_block)
+    	try:
+    		self.state = 219
+    		self._errHandler.sync(self)
+    		la_ = self._interp.adaptivePredict(self._input,22,self._ctx)
+    		if la_ == 1:
+    			self.enterOuterAlt(localctx, 1)
+    			self.state = 213
+    			localctx.l = self.match(MapCSSParser.LBRACE)
+    			self.state = 214
+    			self.declarations()
+    			self.state = 215
+    			self.match(MapCSSParser.RBRACE)
+    		elif la_ == 2:
+    			self.enterOuterAlt(localctx, 2)
+    			self.state = 217
+    			localctx.l = self.match(MapCSSParser.LBRACE)
+    			self.state = 218
+    			self.match(MapCSSParser.RBRACE)
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class DeclarationsContext(ParserRuleContext):
@@ -1719,43 +1677,43 @@ class MapCSSParser ( Parser ):
 
     def declarations(self):
 
-        localctx = MapCSSParser.DeclarationsContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 38, self.RULE_declarations)
-        self._la = 0 # Token type
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 221
-            self.declaration()
-            self.state = 226
-            self._errHandler.sync(self)
-            _alt = self._interp.adaptivePredict(self._input,23,self._ctx)
-            while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
-                if _alt==1:
-                    self.state = 222
-                    self.match(MapCSSParser.SEMICOLON)
-                    self.state = 223
-                    self.declaration() 
-                self.state = 228
-                self._errHandler.sync(self)
-                _alt = self._interp.adaptivePredict(self._input,23,self._ctx)
+    	localctx = MapCSSParser.DeclarationsContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 38, self.RULE_declarations)
+    	self._la = 0 # Token type
+    	try:
+    		self.enterOuterAlt(localctx, 1)
+    		self.state = 221
+    		self.declaration()
+    		self.state = 226
+    		self._errHandler.sync(self)
+    		_alt = self._interp.adaptivePredict(self._input,23,self._ctx)
+    		while _alt not in [2, ATN.INVALID_ALT_NUMBER]:
+    			if _alt==1:
+    			    self.state = 222
+    			    self.match(MapCSSParser.SEMICOLON)
+    			    self.state = 223
+    			    self.declaration() 
+    			self.state = 228
+    			self._errHandler.sync(self)
+    			_alt = self._interp.adaptivePredict(self._input,23,self._ctx)
 
-            self.state = 232
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            while _la==MapCSSParser.SEMICOLON:
-                self.state = 229
-                self.match(MapCSSParser.SEMICOLON)
-                self.state = 234
-                self._errHandler.sync(self)
-                _la = self._input.LA(1)
+    		self.state = 232
+    		self._errHandler.sync(self)
+    		_la = self._input.LA(1)
+    		while _la==MapCSSParser.SEMICOLON:
+    		    self.state = 229
+    		    self.match(MapCSSParser.SEMICOLON)
+    		    self.state = 234
+    		    self._errHandler.sync(self)
+    		    _la = self._input.LA(1)
 
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class DeclarationContext(ParserRuleContext):
@@ -1802,47 +1760,45 @@ class MapCSSParser ( Parser ):
 
     def declaration(self):
 
-        localctx = MapCSSParser.DeclarationContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 40, self.RULE_declaration)
-        self._la = 0 # Token type
-        try:
-            self.state = 244
-            self._errHandler.sync(self)
-            token = self._input.LA(1)
-            if token in [MapCSSParser.SET]:
-                self.enterOuterAlt(localctx, 1)
-                self.state = 235
-                self.match(MapCSSParser.SET)
-                self.state = 237
-                self._errHandler.sync(self)
-                _la = self._input.LA(1)
-                if _la==MapCSSParser.DOT:
-                    self.state = 236
-                    self.match(MapCSSParser.DOT)
+    	localctx = MapCSSParser.DeclarationContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 40, self.RULE_declaration)
+    	self._la = 0 # Token type
+    	try:
+    		self.state = 244
+    		self._errHandler.sync(self)
+    		token = self._input.LA(1)
+    		if token in [MapCSSParser.SET]:
+    			self.enterOuterAlt(localctx, 1)
+    			self.state = 235
+    			self.match(MapCSSParser.SET)
+    			self.state = 237
+    			self._errHandler.sync(self)
+    			_la = self._input.LA(1)
+    			if _la==MapCSSParser.DOT:
+    			    self.state = 236
+    			    self.match(MapCSSParser.DOT)
 
 
-                self.state = 239
-                self.cssident()
-                pass
-            elif token in [MapCSSParser.OP_MINUS, MapCSSParser.NCOMPONENT]:
-                self.enterOuterAlt(localctx, 2)
-                self.state = 240
-                self.declaration_property()
-                self.state = 241
-                self.match(MapCSSParser.COLON)
-                self.state = 242
-                self.declaration_value()
-                pass
-            else:
-                raise NoViableAltException(self)
+    			self.state = 239
+    			self.cssident()
+    		elif token in [MapCSSParser.OP_MINUS, MapCSSParser.NCOMPONENT]:
+    			self.enterOuterAlt(localctx, 2)
+    			self.state = 240
+    			self.declaration_property()
+    			self.state = 241
+    			self.match(MapCSSParser.COLON)
+    			self.state = 242
+    			self.declaration_value()
+    		else:
+    			raise NoViableAltException(self)
 
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class Declaration_propertyContext(ParserRuleContext):
@@ -1918,32 +1874,27 @@ class MapCSSParser ( Parser ):
 
     def declaration_value(self):
 
-        localctx = MapCSSParser.Declaration_valueContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 44, self.RULE_declaration_value)
-        try:
-            self.state = 250
-            self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,27,self._ctx)
-            if la_ == 1:
-                self.enterOuterAlt(localctx, 1)
-                self.state = 248
-                self.single_value()
-                pass
-
-            elif la_ == 2:
-                self.enterOuterAlt(localctx, 2)
-                self.state = 249
-                self.functionExpression()
-                pass
-
-
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    	localctx = MapCSSParser.Declaration_valueContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 44, self.RULE_declaration_value)
+    	try:
+    		self.state = 250
+    		self._errHandler.sync(self)
+    		la_ = self._interp.adaptivePredict(self._input,27,self._ctx)
+    		if la_ == 1:
+    			self.enterOuterAlt(localctx, 1)
+    			self.state = 248
+    			self.single_value()
+    		elif la_ == 2:
+    			self.enterOuterAlt(localctx, 2)
+    			self.state = 249
+    			self.functionExpression()
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class Int_Context(ParserRuleContext):
@@ -1976,32 +1927,30 @@ class MapCSSParser ( Parser ):
 
     def int_(self):
 
-        localctx = MapCSSParser.Int_Context(self, self._ctx, self.state)
-        self.enterRule(localctx, 46, self.RULE_int_)
-        try:
-            self.state = 254
-            self._errHandler.sync(self)
-            token = self._input.LA(1)
-            if token in [MapCSSParser.POSITIVE_INT]:
-                self.enterOuterAlt(localctx, 1)
-                self.state = 252
-                localctx.n = self.match(MapCSSParser.POSITIVE_INT)
-                pass
-            elif token in [MapCSSParser.NEGATIVE_INT]:
-                self.enterOuterAlt(localctx, 2)
-                self.state = 253
-                localctx.n = self.match(MapCSSParser.NEGATIVE_INT)
-                pass
-            else:
-                raise NoViableAltException(self)
+    	localctx = MapCSSParser.Int_Context(self, self._ctx, self.state)
+    	self.enterRule(localctx, 46, self.RULE_int_)
+    	try:
+    		self.state = 254
+    		self._errHandler.sync(self)
+    		token = self._input.LA(1)
+    		if token in [MapCSSParser.POSITIVE_INT]:
+    			self.enterOuterAlt(localctx, 1)
+    			self.state = 252
+    			localctx.n = self.match(MapCSSParser.POSITIVE_INT)
+    		elif token in [MapCSSParser.NEGATIVE_INT]:
+    			self.enterOuterAlt(localctx, 2)
+    			self.state = 253
+    			localctx.n = self.match(MapCSSParser.NEGATIVE_INT)
+    		else:
+    			raise NoViableAltException(self)
 
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class Single_valueContext(ParserRuleContext):
@@ -2048,52 +1997,46 @@ class MapCSSParser ( Parser ):
 
     def single_value(self):
 
-        localctx = MapCSSParser.Single_valueContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 48, self.RULE_single_value)
-        try:
-            self.state = 262
-            self._errHandler.sync(self)
-            token = self._input.LA(1)
-            if token in [MapCSSParser.POSITIVE_INT]:
-                self.enterOuterAlt(localctx, 1)
-                self.state = 256
-                localctx.v = self.match(MapCSSParser.POSITIVE_INT)
-                pass
-            elif token in [MapCSSParser.NEGATIVE_INT]:
-                self.enterOuterAlt(localctx, 2)
-                self.state = 257
-                localctx.v = self.match(MapCSSParser.NEGATIVE_INT)
-                pass
-            elif token in [MapCSSParser.POSITIVE_FLOAT]:
-                self.enterOuterAlt(localctx, 3)
-                self.state = 258
-                localctx.v = self.match(MapCSSParser.POSITIVE_FLOAT)
-                pass
-            elif token in [MapCSSParser.NEGATIVE_FLOAT]:
-                self.enterOuterAlt(localctx, 4)
-                self.state = 259
-                localctx.v = self.match(MapCSSParser.NEGATIVE_FLOAT)
-                pass
-            elif token in [MapCSSParser.DQUOTED_STRING, MapCSSParser.SQUOTED_STRING]:
-                self.enterOuterAlt(localctx, 5)
-                self.state = 260
-                self.quoted()
-                pass
-            elif token in [MapCSSParser.OP_MINUS, MapCSSParser.NCOMPONENT]:
-                self.enterOuterAlt(localctx, 6)
-                self.state = 261
-                self.osmtag()
-                pass
-            else:
-                raise NoViableAltException(self)
+    	localctx = MapCSSParser.Single_valueContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 48, self.RULE_single_value)
+    	try:
+    		self.state = 262
+    		self._errHandler.sync(self)
+    		token = self._input.LA(1)
+    		if token in [MapCSSParser.POSITIVE_INT]:
+    			self.enterOuterAlt(localctx, 1)
+    			self.state = 256
+    			localctx.v = self.match(MapCSSParser.POSITIVE_INT)
+    		elif token in [MapCSSParser.NEGATIVE_INT]:
+    			self.enterOuterAlt(localctx, 2)
+    			self.state = 257
+    			localctx.v = self.match(MapCSSParser.NEGATIVE_INT)
+    		elif token in [MapCSSParser.POSITIVE_FLOAT]:
+    			self.enterOuterAlt(localctx, 3)
+    			self.state = 258
+    			localctx.v = self.match(MapCSSParser.POSITIVE_FLOAT)
+    		elif token in [MapCSSParser.NEGATIVE_FLOAT]:
+    			self.enterOuterAlt(localctx, 4)
+    			self.state = 259
+    			localctx.v = self.match(MapCSSParser.NEGATIVE_FLOAT)
+    		elif token in [MapCSSParser.DQUOTED_STRING, MapCSSParser.SQUOTED_STRING]:
+    			self.enterOuterAlt(localctx, 5)
+    			self.state = 260
+    			self.quoted()
+    		elif token in [MapCSSParser.OP_MINUS, MapCSSParser.NCOMPONENT]:
+    			self.enterOuterAlt(localctx, 6)
+    			self.state = 261
+    			self.osmtag()
+    		else:
+    			raise NoViableAltException(self)
 
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class BooleanOperatorContext(ParserRuleContext):
@@ -2131,25 +2074,30 @@ class MapCSSParser ( Parser ):
 
     def booleanOperator(self):
 
-        localctx = MapCSSParser.BooleanOperatorContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 50, self.RULE_booleanOperator)
-        self._la = 0 # Token type
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 264
-            _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << MapCSSParser.OP_EQ) | (1 << MapCSSParser.OP_NEQ) | (1 << MapCSSParser.OP_OR) | (1 << MapCSSParser.OP_AND))) != 0)):
-                self._errHandler.recoverInline(self)
-            else:
-                self._errHandler.reportMatch(self)
-                self.consume()
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    	localctx = MapCSSParser.BooleanOperatorContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 50, self.RULE_booleanOperator)
+    	self._la = 0 # Token type
+    	try:
+    		self.enterOuterAlt(localctx, 1)
+    		self.state = 264
+    		_la = self._input.LA(1)
+    		if (_la) & ~0x3F != 0 or (1 << _la) & (
+    			(1 << MapCSSParser.OP_EQ)
+    			| (1 << MapCSSParser.OP_NEQ)
+    			| (1 << MapCSSParser.OP_OR)
+    			| (1 << MapCSSParser.OP_AND)
+    		) == 0:
+    			self._errHandler.recoverInline(self)
+    		else:
+    			self._errHandler.reportMatch(self)
+    			self.consume()
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class NumericOperatorContext(ParserRuleContext):
@@ -2193,25 +2141,32 @@ class MapCSSParser ( Parser ):
 
     def numericOperator(self):
 
-        localctx = MapCSSParser.NumericOperatorContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 52, self.RULE_numericOperator)
-        self._la = 0 # Token type
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 266
-            _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << MapCSSParser.OP_EQ) | (1 << MapCSSParser.OP_NEQ) | (1 << MapCSSParser.OP_LE) | (1 << MapCSSParser.OP_GE) | (1 << MapCSSParser.OP_LT) | (1 << MapCSSParser.OP_GT))) != 0)):
-                self._errHandler.recoverInline(self)
-            else:
-                self._errHandler.reportMatch(self)
-                self.consume()
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    	localctx = MapCSSParser.NumericOperatorContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 52, self.RULE_numericOperator)
+    	self._la = 0 # Token type
+    	try:
+    		self.enterOuterAlt(localctx, 1)
+    		self.state = 266
+    		_la = self._input.LA(1)
+    		if (_la) & ~0x3F != 0 or (1 << _la) & (
+    			(1 << MapCSSParser.OP_EQ)
+    			| (1 << MapCSSParser.OP_NEQ)
+    			| (1 << MapCSSParser.OP_LE)
+    			| (1 << MapCSSParser.OP_GE)
+    			| (1 << MapCSSParser.OP_LT)
+    			| (1 << MapCSSParser.OP_GT)
+    		) == 0:
+    			self._errHandler.recoverInline(self)
+    		else:
+    			self._errHandler.reportMatch(self)
+    			self.consume()
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class ValueOperatorContext(ParserRuleContext):
@@ -2253,47 +2208,42 @@ class MapCSSParser ( Parser ):
 
     def valueOperator(self):
 
-        localctx = MapCSSParser.ValueOperatorContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 54, self.RULE_valueOperator)
-        try:
-            self.state = 273
-            self._errHandler.sync(self)
-            token = self._input.LA(1)
-            if token in [MapCSSParser.OP_EQ, MapCSSParser.OP_NEQ, MapCSSParser.OP_LE, MapCSSParser.OP_GE, MapCSSParser.OP_LT, MapCSSParser.OP_GT]:
-                self.enterOuterAlt(localctx, 1)
-                self.state = 268
-                self.numericOperator()
-                pass
-            elif token in [MapCSSParser.OP_STARTS_WITH]:
-                self.enterOuterAlt(localctx, 2)
-                self.state = 269
-                self.match(MapCSSParser.OP_STARTS_WITH)
-                pass
-            elif token in [MapCSSParser.OP_ENDS_WITH]:
-                self.enterOuterAlt(localctx, 3)
-                self.state = 270
-                self.match(MapCSSParser.OP_ENDS_WITH)
-                pass
-            elif token in [MapCSSParser.OP_SUBSTRING]:
-                self.enterOuterAlt(localctx, 4)
-                self.state = 271
-                self.match(MapCSSParser.OP_SUBSTRING)
-                pass
-            elif token in [MapCSSParser.OP_CONTAINS]:
-                self.enterOuterAlt(localctx, 5)
-                self.state = 272
-                self.match(MapCSSParser.OP_CONTAINS)
-                pass
-            else:
-                raise NoViableAltException(self)
+    	localctx = MapCSSParser.ValueOperatorContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 54, self.RULE_valueOperator)
+    	try:
+    		self.state = 273
+    		self._errHandler.sync(self)
+    		token = self._input.LA(1)
+    		if token in [MapCSSParser.OP_EQ, MapCSSParser.OP_NEQ, MapCSSParser.OP_LE, MapCSSParser.OP_GE, MapCSSParser.OP_LT, MapCSSParser.OP_GT]:
+    			self.enterOuterAlt(localctx, 1)
+    			self.state = 268
+    			self.numericOperator()
+    		elif token in [MapCSSParser.OP_STARTS_WITH]:
+    			self.enterOuterAlt(localctx, 2)
+    			self.state = 269
+    			self.match(MapCSSParser.OP_STARTS_WITH)
+    		elif token in [MapCSSParser.OP_ENDS_WITH]:
+    			self.enterOuterAlt(localctx, 3)
+    			self.state = 270
+    			self.match(MapCSSParser.OP_ENDS_WITH)
+    		elif token in [MapCSSParser.OP_SUBSTRING]:
+    			self.enterOuterAlt(localctx, 4)
+    			self.state = 271
+    			self.match(MapCSSParser.OP_SUBSTRING)
+    		elif token in [MapCSSParser.OP_CONTAINS]:
+    			self.enterOuterAlt(localctx, 5)
+    			self.state = 272
+    			self.match(MapCSSParser.OP_CONTAINS)
+    		else:
+    			raise NoViableAltException(self)
 
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class RegexOperatorContext(ParserRuleContext):
@@ -2325,25 +2275,25 @@ class MapCSSParser ( Parser ):
 
     def regexOperator(self):
 
-        localctx = MapCSSParser.RegexOperatorContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 56, self.RULE_regexOperator)
-        self._la = 0 # Token type
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 275
-            _la = self._input.LA(1)
-            if not(_la==MapCSSParser.OP_MATCH or _la==MapCSSParser.OP_NOT_MATCH):
-                self._errHandler.recoverInline(self)
-            else:
-                self._errHandler.reportMatch(self)
-                self.consume()
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
+    	localctx = MapCSSParser.RegexOperatorContext(self, self._ctx, self.state)
+    	self.enterRule(localctx, 56, self.RULE_regexOperator)
+    	self._la = 0 # Token type
+    	try:
+    		self.enterOuterAlt(localctx, 1)
+    		self.state = 275
+    		_la = self._input.LA(1)
+    		if _la not in [MapCSSParser.OP_MATCH, MapCSSParser.OP_NOT_MATCH]:
+    			self._errHandler.recoverInline(self)
+    		else:
+    			self._errHandler.reportMatch(self)
+    			self.consume()
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.exitRule()
+    	return localctx
 
 
     class BooleanExpressionContext(ParserRuleContext):
@@ -2414,96 +2364,83 @@ class MapCSSParser ( Parser ):
 
 
     def booleanExpression(self, _p:int=0):
-        _parentctx = self._ctx
-        _parentState = self.state
-        localctx = MapCSSParser.BooleanExpressionContext(self, self._ctx, _parentState)
-        _prevctx = localctx
-        _startState = 58
-        self.enterRecursionRule(localctx, 58, self.RULE_booleanExpression, _p)
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 297
-            self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,31,self._ctx)
-            if la_ == 1:
-                self.state = 278
-                localctx.op = self.match(MapCSSParser.PAR_OPEN)
-                self.state = 279
-                self.booleanExpression(0)
-                self.state = 280
-                self.match(MapCSSParser.PAR_CLOSE)
-                pass
+    	_parentctx = self._ctx
+    	_parentState = self.state
+    	localctx = MapCSSParser.BooleanExpressionContext(self, self._ctx, _parentState)
+    	_prevctx = localctx
+    	_startState = 58
+    	self.enterRecursionRule(localctx, 58, self.RULE_booleanExpression, _p)
+    	try:
+    		self.enterOuterAlt(localctx, 1)
+    		self.state = 297
+    		self._errHandler.sync(self)
+    		la_ = self._interp.adaptivePredict(self._input,31,self._ctx)
+    		if la_ == 1:
+    			self.state = 278
+    			localctx.op = self.match(MapCSSParser.PAR_OPEN)
+    			self.state = 279
+    			self.booleanExpression(0)
+    			self.state = 280
+    			self.match(MapCSSParser.PAR_CLOSE)
+    		elif la_ == 2:
+    			self.state = 282
+    			localctx.op = self.match(MapCSSParser.OP_NOT)
+    			self.state = 283
+    			self.booleanExpression(6)
+    		elif la_ == 3:
+    			self.state = 284
+    			self.valueExpression(0)
+    			self.state = 285
+    			self.valueOperator()
+    			self.state = 286
+    			self.valueExpression(0)
+    		elif la_ == 4:
+    			self.state = 288
+    			self.valueExpression(0)
+    			self.state = 289
+    			self.regexOperator()
+    			self.state = 290
+    			self.regexExpression()
+    		elif la_ == 5:
+    			self.state = 292
+    			self.regexExpression()
+    			self.state = 293
+    			self.regexOperator()
+    			self.state = 294
+    			self.regexExpression()
+    		elif la_ == 6:
+    			self.state = 296
+    			self.functionExpression()
+    		self._ctx.stop = self._input.LT(-1)
+    		self.state = 305
+    		self._errHandler.sync(self)
+    		_alt = self._interp.adaptivePredict(self._input,32,self._ctx)
+    		while _alt not in [2, ATN.INVALID_ALT_NUMBER]:
+    			if _alt==1:
+    			    if self._parseListeners is not None:
+    			        self.triggerExitRuleEvent()
+    			    _prevctx = localctx
+    			    localctx = MapCSSParser.BooleanExpressionContext(self, _parentctx, _parentState)
+    			    self.pushNewRecursionContext(localctx, _startState, self.RULE_booleanExpression)
+    			    self.state = 299
+    			    if not self.precpred(self._ctx, 5):
+    			        from antlr4.error.Errors import FailedPredicateException
+    			        raise FailedPredicateException(self, "self.precpred(self._ctx, 5)")
+    			    self.state = 300
+    			    self.booleanOperator()
+    			    self.state = 301
+    			    self.booleanExpression(6) 
+    			self.state = 307
+    			self._errHandler.sync(self)
+    			_alt = self._interp.adaptivePredict(self._input,32,self._ctx)
 
-            elif la_ == 2:
-                self.state = 282
-                localctx.op = self.match(MapCSSParser.OP_NOT)
-                self.state = 283
-                self.booleanExpression(6)
-                pass
-
-            elif la_ == 3:
-                self.state = 284
-                self.valueExpression(0)
-                self.state = 285
-                self.valueOperator()
-                self.state = 286
-                self.valueExpression(0)
-                pass
-
-            elif la_ == 4:
-                self.state = 288
-                self.valueExpression(0)
-                self.state = 289
-                self.regexOperator()
-                self.state = 290
-                self.regexExpression()
-                pass
-
-            elif la_ == 5:
-                self.state = 292
-                self.regexExpression()
-                self.state = 293
-                self.regexOperator()
-                self.state = 294
-                self.regexExpression()
-                pass
-
-            elif la_ == 6:
-                self.state = 296
-                self.functionExpression()
-                pass
-
-
-            self._ctx.stop = self._input.LT(-1)
-            self.state = 305
-            self._errHandler.sync(self)
-            _alt = self._interp.adaptivePredict(self._input,32,self._ctx)
-            while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
-                if _alt==1:
-                    if self._parseListeners is not None:
-                        self.triggerExitRuleEvent()
-                    _prevctx = localctx
-                    localctx = MapCSSParser.BooleanExpressionContext(self, _parentctx, _parentState)
-                    self.pushNewRecursionContext(localctx, _startState, self.RULE_booleanExpression)
-                    self.state = 299
-                    if not self.precpred(self._ctx, 5):
-                        from antlr4.error.Errors import FailedPredicateException
-                        raise FailedPredicateException(self, "self.precpred(self._ctx, 5)")
-                    self.state = 300
-                    self.booleanOperator()
-                    self.state = 301
-                    self.booleanExpression(6) 
-                self.state = 307
-                self._errHandler.sync(self)
-                _alt = self._interp.adaptivePredict(self._input,32,self._ctx)
-
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.unrollRecursionContexts(_parentctx)
-        return localctx
+    	except RecognitionException as re:
+    	    localctx.exception = re
+    	    self._errHandler.reportError(self, re)
+    	    self._errHandler.recover(self, re)
+    	finally:
+    		self.unrollRecursionContexts(_parentctx)
+    	return localctx
 
 
     class ValueExpressionContext(ParserRuleContext):

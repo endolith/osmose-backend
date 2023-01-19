@@ -179,8 +179,10 @@ class Test(TestAnalyserOsmosis):
         from modules import config
         TestAnalyserOsmosis.setup_class()
         # TODO: generate a .osm file that triggers errors
-        cls.analyser_conf = cls.load_osm("tests/saint_barthelemy.osm.bz2",
-                                         config.dir_tmp + "/tests/osmosis_boundary_administrative.test.xml")
+        cls.analyser_conf = cls.load_osm(
+            "tests/saint_barthelemy.osm.bz2",
+            f"{config.dir_tmp}/tests/osmosis_boundary_administrative.test.xml",
+        )
 
     def test(self):
         with Analyser_Osmosis_Boundary_Administrative(self.analyser_conf, self.logger) as a:

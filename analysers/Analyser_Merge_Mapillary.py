@@ -76,7 +76,7 @@ class Source_Mapillary(Source):
             self.logger.err(row)
             raise
 
-        start_time = (datetime.today() - timedelta(days=365*2)).timestamp()
+        start_time = (datetime.now() - timedelta(days=365*2)).timestamp()
         MLY_ACCESS_TOKEN = 'MLY|3804396159685239|c5712d0fb9ef5d4dfef585154b00ffa7'
 
         with open(tmp_file, 'w') as csvfile:
@@ -89,12 +89,12 @@ class Source_Mapillary(Source):
                 self.logger.log(f"To many tiles for the area ({n_tiles}), abort.")
                 return True
 
+            # Use proxy.osmose.openstreetmap.fr as whitelisted proxy for tiles.mapillary.com
+            mapillary_host = 'https://proxy.osmose.openstreetmap.fr/mapillary'
             for (n, [z, x, y]) in enumerate(tiles):
                 if n % 500 == 0:
                     self.logger.log(f"{n} / {n_tiles}")
 
-                # Use proxy.osmose.openstreetmap.fr as whitelisted proxy for tiles.mapillary.com
-                mapillary_host = 'https://proxy.osmose.openstreetmap.fr/mapillary'
                 if self.layer == 'trafficsigns':
                     url = f"{mapillary_host}/maps/vtp/mly_map_feature_traffic_sign/2/{z}/{x}/{y}/?access_token={MLY_ACCESS_TOKEN}"
                 elif self.layer == 'points':

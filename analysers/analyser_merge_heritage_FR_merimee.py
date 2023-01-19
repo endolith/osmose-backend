@@ -29,16 +29,16 @@ from functools import reduce
 class Analyser_Merge_Heritage_FR_Merimee(Analyser_Merge_Point):
     def __init__(self, config, logger = None):
         Analyser_Merge_Point.__init__(self, config, logger)
-        doc = dict(
-            detail = T_(
-'''A historical monument is here but is not mapped. The list of monuments
+            doc = dict(
+                detail = T_(
+        '''A historical monument is here but is not mapped. The list of monuments
 comes from the database "Merimee Inventory of monuments" in France by the
 Ministry of Culture.'''),
-            fix = T_(
-'''See [heritage](https://wiki.openstreetmap.org/wiki/Key:heritage) on
+                fix = T_(
+        '''See [heritage](https://wiki.openstreetmap.org/wiki/Key:heritage) on
 wiki. Add the proper tags if something already exists.'''),
-            trap = T_(
-'''The position of the markers comes from address geocoding. They may be
+                trap = T_(
+        '''The position of the markers comes from address geocoding. They may be
 located elsewhere. The marker can have a very rough position, with
 low accuracy to the town. Carefully check the contents of the proposed
 tags, there can be curious or unsuitable values. Do not override tags of UNESCO
@@ -57,7 +57,7 @@ World Heritage.'''))
             # Match YYYY ou YYYY/MM ou YYYY/MM/DD
             match = re.match(r"^(\d{4}(?:/\d{2}(?:/\d{2})?)?) :", dpro)
             if match:
-                ret = match.group(1).replace("/", "-")
+                ret = match[1].replace("/", "-")
             return ret
 
         BLACK_WORDS = [
@@ -85,30 +85,75 @@ World Heritage.'''))
         self.init(
             "https://data.culture.gouv.fr/explore/dataset/liste-des-immeubles-proteges-au-titre-des-monuments-historiques/",
             "Immeubles protégés au titre des Monuments Historiques",
-            CSV(SourceOpenDataSoft(
-                attribution="Ministère de la Culture",
-                url="https://data.culture.gouv.fr/explore/dataset/liste-des-immeubles-proteges-au-titre-des-monuments-historiques",
-                filter=lambda s: reduce(lambda a, v: a.replace(v, ''), SKIP, (u'' + s).encode('utf-8').replace(b'l\u92', b"l'").replace(b'\x85)', b"...)").decode('utf-8', 'ignore')))),
-            Load_XY("p_coordonnees", "p_coordonnees",
-                xFunction = lambda x: x and x.split(',')[1],
-                yFunction = lambda y: y and y.split(',')[0],
-                select = {"Date de protection": True}),
+            CSV(
+                SourceOpenDataSoft(
+                    attribution="Ministère de la Culture",
+                    url="https://data.culture.gouv.fr/explore/dataset/liste-des-immeubles-proteges-au-titre-des-monuments-historiques",
+                    filter=lambda s: reduce(
+                        lambda a, v: a.replace(v, ''),
+                        SKIP,
+                        f'{s}'.encode('utf-8')
+                        .replace(b'l\u92', b"l'")
+                        .replace(b'\x85)', b"...)")
+                        .decode('utf-8', 'ignore'),
+                    ),
+                )
+            ),
+            Load_XY(
+                "p_coordonnees",
+                "p_coordonnees",
+                xFunction=lambda x: x and x.split(',')[1],
+                yFunction=lambda y: y and y.split(',')[0],
+                select={"Date de protection": True},
+            ),
             Conflate(
-                select = Select(
-                    types = ["nodes", "ways", "relations"],
-                    tags = {
-#                        "heritage": ["1", "2", "3"],
+                select=Select(
+                    types=["nodes", "ways", "relations"],
+                    tags={
+                        # #                        "heritage": ["1", "2", "3"],
                         "heritage:operator": None,
-                        "ref:mhs": lambda t: "{0} NOT LIKE 'PM%' AND {0} NOT LIKE 'IA%'".format(t)}), # Not a Palissy ref nor "Inventaire général du patrimoine culturel" ref
-                osmRef = "ref:mhs",
-                conflationDistance = 1000,
-                tag_keep_multiple_values = ["heritage:operator"],
-                mapping = Mapping(
-                    static1 = {"heritage:operator": "mhs"},
-                    static2 = {"source:heritage": self.source},
-                    mapping1 = {
+                        "ref:mhs": lambda t: "{0} NOT LIKE 'PM%' AND {0} NOT LIKE 'IA%'".format(
+                            t
+                        ),
+                    },
+                ),  # Not a Palissy ref nor "Inventaire général du patrimoine culturel" ref
+                osmRef="ref:mhs",
+                conflationDistance=1000,
+                tag_keep_multiple_values=["heritage:operator"],
+                mapping=Mapping(
+                    static1={"heritage:operator": "mhs"},
+                    static2={"source:heritage": self.source},
+                    mapping1={
                         "ref:mhs": "Référence",
-                        "mhs:inscription_date": lambda res: parseDPRO(res["Date de protection"]),
-                        "heritage": lambda res: 2 if res["Précision protection"] and "classement par arrêté" in res["Précision protection"] else 3 if res["Précision protection"] and "inscription par arrêté" in res["Précision protection"] else None},
-                    mapping2 = {"name": lambda res: res["Appellation courante"] if res["Appellation courante"] not in BLACK_WORDS else None},
-                    text = lambda tags, fields: T_("Historical monument: {0}", ", ".join(filter(lambda x: x, [fields["Date de Protection"], fields["Adresse"], fields["Commune"]]))) )))
+                        "mhs:inscription_date": lambda res: parseDPRO(
+                            res["Date de protection"]
+                        ),
+                        "heritage": lambda res: 2
+                        if res["Précision protection"]
+                        and "classement par arrêté" in res["Précision protection"]
+                        else 3
+                        if res["Précision protection"]
+                        and "inscription par arrêté" in res["Précision protection"]
+                        else None,
+                    },
+                    mapping2={
+                        "name": lambda res: res["Appellation courante"]
+                        if res["Appellation courante"] not in BLACK_WORDS
+                        else None
+                    },
+                    text=lambda tags, fields: T_(
+                        "Historical monument: {0}",
+                        ", ".join(
+                            filter(
+                                lambda x: x,
+                                [
+                                    fields["Date de Protection"],
+                                    fields["Adresse"],
+                                    fields["Commune"],
+                                ],
+                            )
+                        ),
+                    ),
+                ),
+            ),
+        )

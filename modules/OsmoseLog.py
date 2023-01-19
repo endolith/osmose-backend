@@ -79,7 +79,9 @@ class logger:
                 self._out.flush()
         proc.wait()
         if proc.returncode not in valid_return_code:
-            raise RuntimeError("'%s' exited with status %s" % (' '.join(cmd), repr(proc.returncode)))
+            raise RuntimeError(
+                f"'{' '.join(cmd)}' exited with status {repr(proc.returncode)}"
+            )
         return proc.returncode
 
     def execute_out(self, cmd, cwd=None, valid_return_code=(0,), background=False):
@@ -110,10 +112,10 @@ class logger:
         from email.mime.text import MIMEText
 
         hostname = socket.getfqdn()
-        email_from = "osmose@%s" % hostname
+        email_from = f"osmose@{hostname}"
 
         msg = MIMEText(err_msg)
-        msg['Subject'] = '%s - osmose failure - %s' % (hostname, err_msg)
+        msg['Subject'] = f'{hostname} - osmose failure - {err_msg}'
         msg['From'] = email_from
         msg['To'] = ", ".join(email_to)
 
@@ -146,9 +148,9 @@ if __name__ == "__main__":
     a.sub().log("test")
     a.sub().sub().log("test")
     a.sub().log("test")
-    a.log(a.log_av_r     + "red" + a.log_ap)
-    a.log(a.log_av_green + "green" + a.log_ap)
-    a.log(a.log_av_b     + "blue" + a.log_ap)
+    a.log(f"{a.log_av_r}red{a.log_ap}")
+    a.log(f"{a.log_av_green}green{a.log_ap}")
+    a.log(f"{a.log_av_b}blue{a.log_ap}")
     a.err("test 1")
     a.sub().err("test 2")
     a.sub().sub().err("test 3")

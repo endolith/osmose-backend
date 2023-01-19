@@ -29,36 +29,35 @@ def load_word(mot, dico, affixes):
     add_dico(m, dico)
     rules = re.sub(r'.*/', '', mot)
     while rules != '':
-        rule = rules[0:2]
+        rule = rules[:2]
         rules = rules[2:]
         if rule in affixes:
             if affixes[rule]['type'] == 'SFX':
                 for r in affixes[rule]['rules']:
-                    if re.search(r[4]+'$', m):
-                        suffixe = re.sub(r'/.*', '', re.sub(r[2]+'$', r[3], m))
+                    if re.search(f'{r[4]}$', m):
+                        suffixe = re.sub(r'/.*', '', re.sub(f'{r[2]}$', r[3], m))
                         if suffixe != m:
                             add_dico(suffixe, dico)
                         if '/' in r[3]:
-                            load_word(re.sub(r[2]+'$', r[3], m), dico, affixes)
+                            load_word(re.sub(f'{r[2]}$', r[3], m), dico, affixes)
             if affixes[rule]['type'] == 'PFX':
                 for r in affixes[rule]['rules']:
-                    if re.search('^'+r[4], m):
+                    if re.search(f'^{r[4]}', m):
                         if '/' in r[3]:
-                            add_dico(re.sub(r'/.*', '', re.sub('^'+r[2],
-                                            r[3], m)), dico)
-                            load_word(re.sub('^'+r[2], r[3], m), dico, affixes)
-                        elif re.sub('^'+r[2], r[3], m) != m:
-                            add_dico(re.sub('^'+r[2], r[3], m), dico)
-                            print('-> ', re.sub('^'+r[2], r[3], m), r)
+                            add_dico(re.sub(r'/.*', '', re.sub(f'^{r[2]}', r[3], m)), dico)
+                            load_word(re.sub(f'^{r[2]}', r[3], m), dico, affixes)
+                        elif re.sub(f'^{r[2]}', r[3], m) != m:
+                            add_dico(re.sub(f'^{r[2]}', r[3], m), dico)
+                            print('-> ', re.sub(f'^{r[2]}', r[3], m), r)
 
 
 def load_dico(fichier, dico):
     "Charge le dictionnaire MAJUSCULE > minuscules accentuées"
 
     # charge les définitions des suffixes (SFX)
-    affixes = dict()
+    affixes = {}
     try:
-        with open(fichier+'.aff', mode='r') as affix:
+        with open(f'{fichier}.aff', mode='r') as affix:
             for aff in affix:
                 af = aff.split()
                 if len(af) == 4 and af[0] in ['SFX']:  # header
@@ -74,7 +73,7 @@ def load_dico(fichier, dico):
         pass
 
     # charge le contenu du dictionaire en appliquant préfixes/suffixes
-    with open(fichier+'.dic', mode='r') as dicco:
+    with open(f'{fichier}.dic', mode='r') as dicco:
         for mot in dicco:
             mot = mot.replace('\n', '')
             load_word(mot, dico, affixes)
@@ -101,7 +100,7 @@ def reaccentue(maj):
     prev = None
     maj = maj.strip().upper()
     majWords = maj.split()
-    majRes = list()
+    majRes = []
     for mot in majWords:
         if mot.lower() in articles:
             majRes.append(mot.capitalize() if prev is None else mot.lower())
@@ -113,10 +112,9 @@ def reaccentue(maj):
                 f = 0
                 for m in dico[mot.upper()]:
                     ml = m.lower()
-                    if prev+' '+ml in dico:
-                        if dico[prev+' '+ml] > f:
-                            f = dico[prev+' '+ml]
-                            mm = m
+                    if f'{prev} {ml}' in dico and dico[f'{prev} {ml}'] > f:
+                        f = dico[f'{prev} {ml}']
+                        mm = m
             if mm is None:
                 mm = mot
             majRes.append(mm.lower().capitalize())
@@ -148,17 +146,16 @@ if __name__ == "__main__":
             print("""Usage:  reaccentue.py texte ou fichier
         reaccentue.py 'BOULEVARD DU MARECHAL JEAN MARIE DE LATTRE DE TASSIGNY'
         reaccentue.py fichier.csv nom_colonne""")
-    else:
-        if bool(re.search('.csv$', sys.argv[1])):
-            with open(sys.argv[1], 'r') as in_file:
-                csv_in = csv.DictReader(in_file)
-                assert csv_in.fieldnames is not None
-                csv_out = csv.DictWriter(sys.stdout,
-                                         fieldnames=csv_in.fieldnames)
-                csv_out.writerow(dict((fn, fn) for fn in csv_in.fieldnames))
-                for row in csv_in:
-                    row[sys.argv[2]] = reaccentue(row[sys.argv[2]])
-                    csv_out.writerow(row)
+    elif bool(re.search('.csv$', sys.argv[1])):
+        with open(sys.argv[1], 'r') as in_file:
+            csv_in = csv.DictReader(in_file)
+            assert csv_in.fieldnames is not None
+            csv_out = csv.DictWriter(sys.stdout,
+                                     fieldnames=csv_in.fieldnames)
+            csv_out.writerow({fn: fn for fn in csv_in.fieldnames})
+            for row in csv_in:
+                row[sys.argv[2]] = reaccentue(row[sys.argv[2]])
+                csv_out.writerow(row)
 
-        else:
-            print(reaccentue(sys.argv[1]))
+    else:
+        print(reaccentue(sys.argv[1]))

@@ -229,12 +229,10 @@ ANALYZE {0}.buildings;
 
 
     def analyser_change_deferred_clean(self):
-        if self.classs != {}:
-            if hasattr(self, 'requires_tables_common'):
-                self.requires_tables_clean(self.requires_tables_common)
-        if self.classs_change != {}:
-            if hasattr(self, 'requires_tables_diff'):
-                self.requires_tables_clean(self.requires_tables_diff)
+        if self.classs != {} and hasattr(self, 'requires_tables_common'):
+            self.requires_tables_clean(self.requires_tables_common)
+        if self.classs_change != {} and hasattr(self, 'requires_tables_diff'):
+            self.requires_tables_clean(self.requires_tables_diff)
 
 
     def analyser_resume(self, timestamp, already_issued_objects):
@@ -299,7 +297,11 @@ ANALYZE {0}.buildings;
                 "/osmosis/CreateTouched.sql",
             ]
             for script in osmosis_resume_post_scripts: # self.config.analyser_conf.osmosis_resume_post_scripts:
-                self.giscurs.execute(open('./' + script, 'r').read().replace(':timestamp', str(timestamp)))
+                self.giscurs.execute(
+                    open(f'./{script}', 'r')
+                    .read()
+                    .replace(':timestamp', str(timestamp))
+                )
             self.giscurs.execute('COMMIT')
             self.giscurs.execute('BEGIN')
 
@@ -423,7 +425,15 @@ WHERE
     def run00(self, sql, callback = None):
         if self.explain_sql:
             self.logger.log(sql.strip())
-        if self.explain_sql and (sql.strip().startswith("SELECT") or sql.strip().startswith("CREATE UNLOGGED TABLE")) and not ';' in sql[:-1] and " AS " in sql:
+        if (
+            self.explain_sql
+            and (
+                sql.strip().startswith("SELECT")
+                or sql.strip().startswith("CREATE UNLOGGED TABLE")
+            )
+            and ';' not in sql[:-1]
+            and " AS " in sql
+        ):
             sql_explain = "EXPLAIN " + sql.split(";")[0]
             self.giscurs.execute(sql_explain)
             for res in self.giscurs.fetchall():
@@ -491,8 +501,7 @@ WHERE
         self.geom["node"].append(self.apiconn.NodeGet(res))
 
     def node_position(self, res):
-        node = self.apiconn.NodeGet(res)
-        if node:
+        if node := self.apiconn.NodeGet(res):
             self.geom["position"].append({'lat': str(node['lat']), 'lon': str(node['lon'])})
 
     def node_new(self, res):
@@ -572,9 +581,7 @@ class TestAnalyserOsmosis(TestAnalyser):
             try:
                 os.makedirs(dirname)
             except OSError:
-                if os.path.isdir(dirname):
-                    pass
-                else:
+                if not os.path.isdir(dirname):
                     raise
 
         cls.conf = conf
@@ -606,12 +613,16 @@ class Test(TestAnalyserOsmosis):
     @classmethod
     def setup_class(cls):
         TestAnalyserOsmosis.setup_class()
-        cls.analyser_conf = cls.load_osm("tests/osmosis.test.osm",
-                                         cls.default_xml_res_path + "osmosis.test.xml",
-                                         {"test": True,
-                                          "addr:city-admin_level": "8,9",
-                                          "driving_side": "left",
-                                          "proj": 2969})
+        cls.analyser_conf = cls.load_osm(
+            "tests/osmosis.test.osm",
+            f"{cls.default_xml_res_path}osmosis.test.xml",
+            {
+                "test": True,
+                "addr:city-admin_level": "8,9",
+                "driving_side": "left",
+                "proj": 2969,
+            },
+        )
 
         import modules.OsmOsisManager
         cls.conf.osmosis_manager = modules.OsmOsisManager.OsmOsisManager(cls.conf, cls.conf.db_host, cls.conf.db_user, cls.conf.db_password, cls.conf.db_base, cls.conf.db_schema or cls.conf.country, cls.conf.db_persistent, cls.logger)
@@ -625,10 +636,15 @@ class Test(TestAnalyserOsmosis):
         for fn in os.listdir("analysers/"):
             if not fn.startswith("analyser_osmosis_") or not fn.endswith(".py"):
                 continue
-            analyser = importlib.import_module("analysers." + fn[:-3], package=".")
+            analyser = importlib.import_module(f"analysers.{fn[:-3]}", package=".")
             for name, obj in inspect.getmembers(analyser):
-                if (inspect.isclass(obj) and obj.__module__ == ("analysers." + fn[:-3]) and
-                    (name.startswith("Analyser") or name.startswith("analyser"))):
+                if (
+                    inspect.isclass(obj)
+                    and obj.__module__ == f"analysers.{fn[:-3]}"
+                    and (
+                        name.startswith("Analyser") or name.startswith("analyser")
+                    )
+                ):
 
                     self.xml_res_file = self.default_xml_res_path + "normal/{0}.xml".format(name)
                     self.analyser_conf.error_file = IssuesFileOsmose.IssuesFileOsmose(self.xml_res_file)
@@ -658,10 +674,15 @@ class Test(TestAnalyserOsmosis):
         for fn in os.listdir("analysers/"):
             if not fn.startswith("analyser_osmosis_") or not fn.endswith(".py"):
                 continue
-            analyser = importlib.import_module("analysers." + fn[:-3], package=".")
+            analyser = importlib.import_module(f"analysers.{fn[:-3]}", package=".")
             for name, obj in inspect.getmembers(analyser):
-                if (inspect.isclass(obj) and obj.__module__ == ("analysers." + fn[:-3]) and
-                    (name.startswith("Analyser") or name.startswith("analyser"))):
+                if (
+                    inspect.isclass(obj)
+                    and obj.__module__ == f"analysers.{fn[:-3]}"
+                    and (
+                        name.startswith("Analyser") or name.startswith("analyser")
+                    )
+                ):
 
                     self.xml_res_file = self.default_xml_res_path + "diff_empty/{0}.xml".format(name)
                     self.analyser_conf.error_file = IssuesFileOsmose.IssuesFileOsmose(self.xml_res_file)
@@ -694,10 +715,15 @@ class Test(TestAnalyserOsmosis):
         for fn in os.listdir("analysers/"):
             if not fn.startswith("analyser_osmosis_") or not fn.endswith(".py"):
                 continue
-            analyser = importlib.import_module("analysers." + fn[:-3], package=".")
+            analyser = importlib.import_module(f"analysers.{fn[:-3]}", package=".")
             for name, obj in inspect.getmembers(analyser):
-                if (inspect.isclass(obj) and obj.__module__ == ("analysers." + fn[:-3]) and
-                    (name.startswith("Analyser") or name.startswith("analyser"))):
+                if (
+                    inspect.isclass(obj)
+                    and obj.__module__ == f"analysers.{fn[:-3]}"
+                    and (
+                        name.startswith("Analyser") or name.startswith("analyser")
+                    )
+                ):
 
                     self.xml_res_file = self.default_xml_res_path + "diff_full/{0}.xml".format(name)
                     self.analyser_conf.error_file = IssuesFileOsmose.IssuesFileOsmose(self.xml_res_file)
@@ -718,10 +744,15 @@ class Test(TestAnalyserOsmosis):
         for fn in os.listdir("analysers/"):
             if not fn.startswith("analyser_osmosis_") or not fn.endswith(".py"):
                 continue
-            analyser = importlib.import_module("analysers." + fn[:-3], package=".")
+            analyser = importlib.import_module(f"analysers.{fn[:-3]}", package=".")
             for name, obj in inspect.getmembers(analyser):
-                if (inspect.isclass(obj) and obj.__module__ == ("analysers." + fn[:-3]) and
-                    (name.startswith("Analyser") or name.startswith("analyser"))):
+                if (
+                    inspect.isclass(obj)
+                    and obj.__module__ == f"analysers.{fn[:-3]}"
+                    and (
+                        name.startswith("Analyser") or name.startswith("analyser")
+                    )
+                ):
 
                     normal_xml = (self.default_xml_res_path +
                                 "normal/{0}.xml".format(name))

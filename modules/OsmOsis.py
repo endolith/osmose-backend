@@ -41,15 +41,14 @@ class OsmOsis:
                 retry = retry - 1
                 if retry == 0:
                     raise
-                else:
-                    if retry % 10 == 0:
-                        print('DB connection fails, retry...')
-                    time.sleep(1)
+                if retry % 10 == 0:
+                    print('DB connection fails, retry...')
+                time.sleep(1)
         psycopg2.extras.register_hstore(self._PgConn)
         self._PgCurs = self._PgConn.cursor()
         self._PgCurs.execute("SET LOCAL statement_timeout = '2h';")
         if schema_path:
-            self._PgCurs.execute("SET search_path TO %s,public;" % schema_path)
+            self._PgCurs.execute(f"SET search_path TO {schema_path},public;")
 
     def __del__(self):
         try:
@@ -77,28 +76,34 @@ class OsmOsis:
     def NodeGet(self, NodeId):
         self._PgCurs.execute("SELECT nodes.id, st_y(nodes.geom), st_x(nodes.geom), nodes.version, users.name, nodes.tags FROM nodes LEFT JOIN users ON nodes.user_id = users.id WHERE nodes.id = %d;" % NodeId)
         r1 = self._PgCurs.fetchone()
-        if not r1: return None
-        return {
-            u"id": r1[0],
-            u"lat": float(r1[1]),
-            u"lon": float(r1[2]),
-            u"version": r1[3],
-            u"user": r1[4] or "",
-            u"tag": r1[5],
-        }
+        return (
+            {
+                u"id": r1[0],
+                u"lat": float(r1[1]),
+                u"lon": float(r1[2]),
+                u"version": r1[3],
+                u"user": r1[4] or "",
+                u"tag": r1[5],
+            }
+            if r1
+            else None
+        )
 
 
     def WayGet(self, WayId, dump_sub_elements=False):
         self._PgCurs.execute("SELECT ways.id, ways.version, users.name, ways.tags, ways.nodes FROM ways LEFT JOIN users ON ways.user_id = users.id WHERE ways.id = %d;" % WayId)
         r1 = self._PgCurs.fetchone()
-        if not r1: return None
-        return {
-            u"id": r1[0],
-            u"version": r1[1],
-            u"user": r1[2] or "",
-            u"tag": r1[3],
-            u"nd": r1[4] if dump_sub_elements else [],
-        }
+        return (
+            {
+                u"id": r1[0],
+                u"version": r1[1],
+                u"user": r1[2] or "",
+                u"tag": r1[3],
+                u"nd": r1[4] if dump_sub_elements else [],
+            }
+            if r1
+            else None
+        )
 
 
     def RelationGet(self, RelationId, dump_sub_elements=False):
@@ -124,5 +129,4 @@ class OsmOsis:
     def UserGet(self, UserId):
         self._PgCurs.execute("SELECT name FROM users WHERE id = %d;" % UserId)
         r1 = self._PgCurs.fetchone()
-        if not r1: return None
-        return r1[0]
+        return r1[0] if r1 else None

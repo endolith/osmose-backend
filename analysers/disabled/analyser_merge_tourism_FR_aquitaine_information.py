@@ -35,25 +35,51 @@ class Analyser_Merge_Tourism_FR_Aquitaine_information(Analyser_Merge):
         self.init(
             u"http://catalogue.datalocale.fr/dataset/liste-points-infos-tourisme-aquitaine",
             u"Liste des points infos tourisme en Aquitaine ",
-            JSON(Source(attribution = u"Réseau SIRTAQUI - Comité Régional de Tourisme d'Aquitaine - www.sirtaqui-aquitaine.com", millesime = "08/2018",
-                    fileUrl = u"http://wcf.tourinsoft.com/Syndication/aquitaine/0c7230f7-94ec-473b-9dce-e4cf38fedb44/Objects?$format=json"),
-                extractor = lambda json: json['d']),
-            Load("LON", "LAT",
-                xFunction = Load.degree,
-                yFunction = Load.degree),
+            JSON(
+                Source(
+                    attribution=u"Réseau SIRTAQUI - Comité Régional de Tourisme d'Aquitaine - www.sirtaqui-aquitaine.com",
+                    millesime="08/2018",
+                    fileUrl=u"http://wcf.tourinsoft.com/Syndication/aquitaine/0c7230f7-94ec-473b-9dce-e4cf38fedb44/Objects?$format=json",
+                ),
+                extractor=lambda json: json['d'],
+            ),
+            Load("LON", "LAT", xFunction=Load.degree, yFunction=Load.degree),
             Conflate(
-                select = Select(
-                    types = ["nodes", "ways"],
-                    tags = {"tourism": "information"}),
-                conflationDistance = 1000,
-                mapping = Mapping(
-                    static1 = {
-                        "tourism": "information",
-                        "information": "office"},
-                    static2 = {"source": self.source},
-                    mapping1 = {
+                select=Select(
+                    types=["nodes", "ways"], tags={"tourism": "information"}
+                ),
+                conflationDistance=1000,
+                mapping=Mapping(
+                    static1={"tourism": "information", "information": "office"},
+                    static2={"source": self.source},
+                    mapping1={
                         "name": "NOMOFFRE",
                         "ref:FR:CRTA": "SyndicObjectID",
-                        "website": lambda fields: None if not fields["URL"] else fields["URL"] if fields["URL"].startswith('http') else 'http://' + fields["URL"]},
-                    mapping2 = {"phone": "TEL"},
-                    text = lambda tags, fields: {"en": u', '.join(filter(lambda x: x, [fields["NOMOFFRE"], fields["AD1"], fields["AD1SUITE"], fields["AD2"], fields["AD3"], fields["CP"], fields["COMMUNE"]]))} )))
+                        "website": lambda fields: (
+                            fields["URL"]
+                            if fields["URL"].startswith('http')
+                            else 'http://' + fields["URL"]
+                        )
+                        if fields["URL"]
+                        else None,
+                    },
+                    mapping2={"phone": "TEL"},
+                    text=lambda tags, fields: {
+                        "en": u', '.join(
+                            filter(
+                                lambda x: x,
+                                [
+                                    fields["NOMOFFRE"],
+                                    fields["AD1"],
+                                    fields["AD1SUITE"],
+                                    fields["AD2"],
+                                    fields["AD3"],
+                                    fields["CP"],
+                                    fields["COMMUNE"],
+                                ],
+                            )
+                        )
+                    },
+                ),
+            ),
+        )

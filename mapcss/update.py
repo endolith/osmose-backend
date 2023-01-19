@@ -18,7 +18,7 @@ def main(mapcsss):
             print(v['url'])
             r = requests.get(v['url'], allow_redirects=True)
             r.encoding = 'utf-8' # Force bad encoding
-            f = '/tmp/mapcss/' + k + '.mapcss'
+            f = f'/tmp/mapcss/{k}.mapcss'
             open(f, 'w').write(r.text)
             try:
                 mapcss2osmose.mapcss2osmose(mapcss = f, output_path = 'plugins')
