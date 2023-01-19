@@ -91,7 +91,7 @@ def get_cache_path(url, extra_cache_key: str = ''):
 
 def update_cache(url, delay, extra_cache_key: str = '', fetch = http_query()):
     cache = get_cache_path(url, extra_cache_key)
-    tmp_file = cache + ".tmp"
+    tmp_file = f"{cache}.tmp"
 
     cur_time = time.time()
     date_string = None
@@ -109,15 +109,15 @@ def update_cache(url, delay, extra_cache_key: str = '', fetch = http_query()):
             os.utime(cache, (cur_time,cur_time))
             return cache
     except:
-        if os.path.exists(cache):
-            print("Error: Fails to download, fall back to obsolete cache: {}".format(url+extra_cache_key))
-            return cache
-        else:
+        if not os.path.exists(cache):
             raise
 
-    outfile = open(cache+".url", "w", encoding="utf-8")
-    outfile.write(url+extra_cache_key)
-    outfile.close()
+        print(
+            f"Error: Fails to download, fall back to obsolete cache: {url + extra_cache_key}"
+        )
+        return cache
+    with open(f"{cache}.url", "w", encoding="utf-8") as outfile:
+        outfile.write(url+extra_cache_key)
     os.rename(tmp_file, cache)
 
     # set timestamp
@@ -144,7 +144,7 @@ def urlread(url: str, delay: int, post: Optional[Dict[str, str]] = None):
     return open(path(url, delay, post), 'r', encoding="utf-8").read()
 
 def set_millesime(url: str, millesime: Optional[datetime]) -> None:
-    with open(get_cache_path(url) + ".millesime", "w", encoding="utf-8") as millesime_file:
+    with open(f"{get_cache_path(url)}.millesime", "w", encoding="utf-8") as millesime_file:
         if millesime is None:
             millesime_file.write("0")
         else:
@@ -152,7 +152,7 @@ def set_millesime(url: str, millesime: Optional[datetime]) -> None:
 
 def get_millesime(url: str, delay: int, post: Optional[Dict[str, str]] = None) -> Optional[datetime]:
     cache_path = get_cache_path(url, str(post or ''))
-    millesime_path = cache_path + ".millesime"
+    millesime_path = f"{cache_path}.millesime"
     try:
         # Synchronize Millesime file expiration with main cache file
         statbuf = os.stat(cache_path)
@@ -180,12 +180,10 @@ class Test(unittest.TestCase):
         # create output directory
         import os
         try:
-          os.makedirs(config.dir_cache)
+            os.makedirs(config.dir_cache)
         except OSError:
-          if os.path.isdir(config.dir_cache):
-            pass
-          else:
-            raise
+            if not os.path.isdir(config.dir_cache):
+                raise
 
         self.url = u"https://osmose.openstreetmap.fr/en/"
         self.url_404 = u"https://osmose.openstreetmap.fr/static/404-osmose-downloader-test-sdkhfqksf"
@@ -205,7 +203,7 @@ class Test(unittest.TestCase):
         dst1 = update_cache(self.url, 0)
         assert dst1
         self.check_file_content(dst1)
-        print("dest file='%s'" % dst1)
+        print(f"dest file='{dst1}'")
 
         # make sure that it is downloaded from server
         os.remove(dst1)

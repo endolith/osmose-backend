@@ -68,15 +68,15 @@ class Analyser_Osmosis_Relation_Open(Analyser_Osmosis):
 
     def __init__(self, config, logger = None):
         Analyser_Osmosis.__init__(self, config, logger)
-        detail = T_(
-'''A relation that should be a closed polygon and it is not. An issue is
+            detail = T_(
+        '''A relation that should be a closed polygon and it is not. An issue is
 reported at each end of open part.''')
         self.classs[1] = self.def_class(item = 6010, level = 3, tags = ['geom', 'boundary'],
             title = T_('Open relation type=boundary'),
             detail = detail)
         self.classs[5] = self.def_class(item = 1170, level = 2, tags = ['geom'],
             title = T_('Open relation type=multipolygon'))
-        for admin_level in range(0, 15):
+        for admin_level in range(15):
             if admin_level <= 6:
                 level = 1
             elif admin_level <= 8:

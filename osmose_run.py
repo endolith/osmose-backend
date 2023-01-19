@@ -94,10 +94,7 @@ class analyser_config:
 
         self.osmosis_manager = osmosis_manager
         self.db_user = conf.db_user
-        if conf.db_schema:
-            self.db_schema = conf.db_schema
-        else:
-            self.db_schema = conf.country
+        self.db_schema = conf.db_schema or conf.country
         self.db_schema_path = conf.db_schema_path
 
         self.options = conf.analyser_options

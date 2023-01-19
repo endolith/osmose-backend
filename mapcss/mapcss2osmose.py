@@ -48,7 +48,7 @@ def quoted_unescape(t, c):
     type = quoted
     Remove surrounding quotes and unescape content
     """
-    if not 'unescape' in t:
+    if 'unescape' not in t:
         t['unescape'] = True
         t['value'] = ast.literal_eval(t['value'])
     return t
@@ -58,7 +58,7 @@ def regexExpression_unescape(t, c):
     type = regexExpression
     Remove surrounding slash and unescape content
     """
-    if not 'unescape' in t:
+    if 'unescape' not in t:
         t['unescape'] = True
         t['value'] = ast.literal_eval("r\"" + t['value'].replace("\\'", "'").replace('\\"', '"').replace('"', '\\"') + "\"")
     return t
@@ -138,7 +138,7 @@ def booleanExpression_capture_first_operand(t, c):
     Capture first operand tag
     """
     if len(t['operands']) >= 1 and t['operands'][0]['type'] == 'functionExpression' and t['operands'][0]['name'] == 'tag':
-        if not t['operator'] in ('!', '!=', '!~'):
+        if t['operator'] not in ('!', '!=', '!~'):
             c['selector_capture'].append(t['operands'][0]['params'][0])
         t['operands'][0] = {'type': 'functionExpression', 'name': '_tag_capture', 'params': ['capture_tags', str(t['selector_index']), 'tags', t['operands'][0]['params'][0]]}
         if t['operator'] in ('!', '!=', '!~') and t['operands'][1]['type'] in ('quoted', 'osmtag', 'regexExpression'):
@@ -190,9 +190,11 @@ def functionExpression_param_regex(t, c):
     type = functionExpression
     Ensure params to regex functions are regex
     """
-    if t['name'] in ('regexp_test', 'regexp_match', 'tag_regex'):
-        if t['params'][0]['type'] == 'quoted':
-            t['params'][0] = {'type': 'regexExpression', 'value': t['params'][0]['value']}
+    if (
+        t['name'] in ('regexp_test', 'regexp_match', 'tag_regex')
+        and t['params'][0]['type'] == 'quoted'
+    ):
+        t['params'][0] = {'type': 'regexExpression', 'value': t['params'][0]['value']}
     return t
 
 def functionExpression_regexp_flags(t, c):
@@ -459,7 +461,18 @@ def segregate_selectors_by_complexity(t):
             for selector in rule['selectors']:
                 if selector['operator']:
                     selector_complex.append(selector)
-                elif any(map(lambda a: not a['pseudo_class'] in ('closed', 'closed2', 'tagged', 'righthandtraffic'), selector['simple_selectors'][0]['pseudo_class'])):
+                elif any(
+                    map(
+                        lambda a: a['pseudo_class']
+                        not in (
+                            'closed',
+                            'closed2',
+                            'tagged',
+                            'righthandtraffic',
+                        ),
+                        selector['simple_selectors'][0]['pseudo_class'],
+                    )
+                ):
                     selector_complex.append(selector)
                 else:
                     selector_simple.append(selector)
@@ -484,7 +497,7 @@ def segregate_selectors_type(rules):
             for selector in rule['selectors']:
                 type_selector = selector['simple_selectors'][0]['type_selector']
                 for t in 'node', 'way', 'relation':
-                    if type_selector == t or type_selector == '*':
+                    if type_selector in [t, '*']:
                         out_selector[t].append(selector)
 
             for t in 'node', 'way', 'relation':

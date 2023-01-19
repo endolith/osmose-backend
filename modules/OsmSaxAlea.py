@@ -262,7 +262,7 @@ class OsmSaxReader(OsmSax.OsmSaxReader):
         f.seek(start)
         parser.feed("<?xml version='1.0' encoding='UTF-8'?>")
         parser.feed("<osm>")
-        for i in range(count//bs):
+        for _ in range(count//bs):
             parser.feed(f.read(bs))
         parser.feed(f.read(count-bs*int(count//bs)))
         parser.feed("</osm>")
@@ -330,7 +330,7 @@ class Test(unittest.TestCase):
             assert res["timestamp"]
             assert res["uid"]
             assert res["user"]
-            self.assertEqual(type(res["tag"]), type(dict()))
+            self.assertEqual(type(res["tag"]), type({}))
         else:
             assert not res
 

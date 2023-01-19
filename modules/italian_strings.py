@@ -83,9 +83,7 @@ def normalize_pharmacy(s):
 
 
 def osmRefVatin(s):
-    if len(s) != 11 or s.isdigit() is False:
-        return None
-    return 'IT' + s
+    return None if len(s) != 11 or s.isdigit() is False else f'IT{s}'
 
 
 ###########################################################################

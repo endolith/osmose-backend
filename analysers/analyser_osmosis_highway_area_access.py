@@ -99,22 +99,29 @@ class Analyser_Osmosis_HighwayAreaAccess(Analyser_Osmosis):
 
     def __init__(self, config, logger = None):
         Analyser_Osmosis.__init__(self, config, logger)
-        if not "proj" in self.config.options:
+        if "proj" not in self.config.options:
             return
-        self.classs_change[1] = self.def_class(item = 2130, level = 3, tags = ['highway', 'routing'],
-            title = T_('Inconsistent Access'),
-            detail = T_(
-'''Inconsistent `motor_vehicle` values.'''))
-        self.classs[2] = self.def_class(item = 2130, level = 3, tags = ['highway', 'routing'],
-            title = T_('Inconsistent Access'),
-            detail = T_(
-'''Inconsistent access values between barrier and highway.'''),
-            trap = T_(
-'''Sometimes a barrier can exist on an (otherwise uninterrupted) highway to prevent vehicles from using it for purposes other than destination traffic.'''),
-            fix = T_(
-'''Copy the appropriate access tag to the barrier node.'''))
-        self.callback10 = lambda res: {"class":1, "data":[self.node_full, self.way_full, self.positionAsText],
-            "text": T_("Inconsistent motor_vehicle values ('{0}'!='{1}')", res[3] if res[3] else '', res[4] if res[4] else '') }
+            self.classs_change[1] = self.def_class(item = 2130, level = 3, tags = ['highway', 'routing'],
+                title = T_('Inconsistent Access'),
+                detail = T_(
+        '''Inconsistent `motor_vehicle` values.'''))
+            self.classs[2] = self.def_class(item = 2130, level = 3, tags = ['highway', 'routing'],
+                title = T_('Inconsistent Access'),
+                detail = T_(
+        '''Inconsistent access values between barrier and highway.'''),
+                trap = T_(
+        '''Sometimes a barrier can exist on an (otherwise uninterrupted) highway to prevent vehicles from using it for purposes other than destination traffic.'''),
+                fix = T_(
+        '''Copy the appropriate access tag to the barrier node.'''))
+        self.callback10 = lambda res: {
+            "class": 1,
+            "data": [self.node_full, self.way_full, self.positionAsText],
+            "text": T_(
+                "Inconsistent motor_vehicle values ('{0}'!='{1}')",
+                res[3] or '',
+                res[4] or '',
+            ),
+        }
 
     def analyser_osmosis_common(self):
         self.run(sql20.format(barriertype='bollard'))
@@ -146,9 +153,11 @@ class Test(TestAnalyserOsmosis):
     def setup_class(cls):
         from modules import config
         TestAnalyserOsmosis.setup_class()
-        cls.analyser_conf = cls.load_osm("tests/osmosis_highway_access_barrier.osm",
-                                         config.dir_tmp + "/tests/osmosis_highway_access_barrier.test.xml",
-                                         {"proj": 2154}) # Random proj to satisfy highway table generation
+        cls.analyser_conf = cls.load_osm(
+            "tests/osmosis_highway_access_barrier.osm",
+            f"{config.dir_tmp}/tests/osmosis_highway_access_barrier.test.xml",
+            {"proj": 2154},
+        )
 
     def test_classes(self):
         with Analyser_Osmosis_HighwayAreaAccess(self.analyser_conf, self.logger) as a:

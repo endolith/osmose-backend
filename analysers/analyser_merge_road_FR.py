@@ -48,36 +48,77 @@ class Analyser_Merge_Road_FR(Analyser_Merge_Network):
         self.init(
             "https://ign.fr",
             "IGN-troncon_de_route",
-            GPKG(SourceIGN(attribution = "IGN",
-                    fileUrl = f"http://files.opendatarchives.fr/professionnels.ign.fr/bdtopo/latest/BDTOPO_3-0_TOUSTHEMES_GPKG_{proj}_D{dep_code}_2022-06-15.7z",
-                    extract = f"BDTOPO_3-0_TOUSTHEMES_GPKG_{proj}_D{dep_code}_2022-06-15/BDTOPO/1_DONNEES_LIVRAISON_2022-06-00173/BDT_3-0_GPKG_{proj}_D{dep_code}-ED2022-06-15/BDT_3-0_GPKG_{proj}_D{dep_code}-ED2022-06-15.gpkg"),
-                layer = "troncon_de_route",
-                fields = ['importance', 'fictif', 'etat_de_l_objet', 'nature', 'nom_1_gauche', 'nom_1_droite', 'nom_2_gauche', 'nom_2_droite']),
-            Load('geom',
-                table_name = 'road_fr_' + config.options['country'].replace("-", "_"),
+            GPKG(
+                SourceIGN(
+                    attribution="IGN",
+                    fileUrl=f"http://files.opendatarchives.fr/professionnels.ign.fr/bdtopo/latest/BDTOPO_3-0_TOUSTHEMES_GPKG_{proj}_D{dep_code}_2022-06-15.7z",
+                    extract=f"BDTOPO_3-0_TOUSTHEMES_GPKG_{proj}_D{dep_code}_2022-06-15/BDTOPO/1_DONNEES_LIVRAISON_2022-06-00173/BDT_3-0_GPKG_{proj}_D{dep_code}-ED2022-06-15/BDT_3-0_GPKG_{proj}_D{dep_code}-ED2022-06-15.gpkg",
+                ),
+                layer="troncon_de_route",
+                fields=[
+                    'importance',
+                    'fictif',
+                    'etat_de_l_objet',
+                    'nature',
+                    'nom_1_gauche',
+                    'nom_1_droite',
+                    'nom_2_gauche',
+                    'nom_2_droite',
+                ],
+            ),
+            Load(
+                'geom',
+                table_name='road_fr_'
+                + config.options['country'].replace("-", "_"),
                 # Ignore : 'Chemin', 'Bac ou liaison maritime', 'Sentier'
-                select = [{
-                    # Even without name
-                    'importance': ['1', '2', '3', '4', '5'],
-                    'fictif': 'false',
-                    'etat_de_l_objet': 'En service',
-                    # 'Escalier', 'Route empierrée'
-                    'nature': ['Bretelle', 'Rond-point', 'Route à 1 chaussée', 'Route à 2 chaussées', 'Type autoroutier', 'Piste cyclable'],
-                }, {
-                    # Only with name
-                    'importance': ['1', '2', '3', '4', '5'],
-                    'fictif': 'false',
-                    'etat_de_l_objet': 'En service',
-                    'nom_1_gauche': {'like': '_%'},
-                    # 'Bretelle', 'Rond-point', 'Route à 1 chaussée', 'Route à 2 chaussées', 'Type autoroutier', 'Piste cyclable'
-                    'nature': ['Escalier', 'Route empierrée'] }] ),
+                select=[
+                    {
+                        # Even without name
+                        'importance': ['1', '2', '3', '4', '5'],
+                        'fictif': 'false',
+                        'etat_de_l_objet': 'En service',
+                        # 'Escalier', 'Route empierrée'
+                        'nature': [
+                            'Bretelle',
+                            'Rond-point',
+                            'Route à 1 chaussée',
+                            'Route à 2 chaussées',
+                            'Type autoroutier',
+                            'Piste cyclable',
+                        ],
+                    },
+                    {
+                        # Only with name
+                        'importance': ['1', '2', '3', '4', '5'],
+                        'fictif': 'false',
+                        'etat_de_l_objet': 'En service',
+                        'nom_1_gauche': {'like': '_%'},
+                        # 'Bretelle', 'Rond-point', 'Route à 1 chaussée', 'Route à 2 chaussées', 'Type autoroutier', 'Piste cyclable'
+                        'nature': ['Escalier', 'Route empierrée'],
+                    },
+                ],
+            ),
             ConflateNetwork(
-                select = Select(
-                    types = ['ways'],
-                    tags = {'highway': None}),
-                conflationDistance = 15,
-                minLength = 50,
-                mapping = Mapping(
-                    static1 = {'highway': 'road'},
-                    static2 = {'source': self.source},
-                    text = lambda tags, fields: {'en': ', '.join(filter(lambda x: x and x != 'None', set([fields['nature'], fields['nom_1_gauche'], fields['nom_1_droite'], fields['nom_2_gauche'], fields['nom_2_droite']]) ))} )))
+                select=Select(types=['ways'], tags={'highway': None}),
+                conflationDistance=15,
+                minLength=50,
+                mapping=Mapping(
+                    static1={'highway': 'road'},
+                    static2={'source': self.source},
+                    text=lambda tags, fields: {
+                        'en': ', '.join(
+                            filter(
+                                lambda x: x and x != 'None',
+                                {
+                                    fields['nature'],
+                                    fields['nom_1_gauche'],
+                                    fields['nom_1_droite'],
+                                    fields['nom_2_gauche'],
+                                    fields['nom_2_droite'],
+                                },
+                            )
+                        )
+                    },
+                ),
+            ),
+        )

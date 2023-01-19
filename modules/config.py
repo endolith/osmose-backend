@@ -29,14 +29,16 @@ username = pwd.getpwuid(os.getuid())[0]
 dir_osmose = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # path to a temporary space, that doesn't need to be backup
-dir_work = "/data/work/%s" % (username)
+dir_work = f"/data/work/{username}"
 
 # frontend which will get results
 url_frontend_update = os.environ.get("URL_FRONTEND_UPDATE", u"https://osmose.openstreetmap.fr/control/send-update")
 url_frontend_opendata_update = u"https://opendata.osmose.openstreetmap.fr/control/send-update"
 
 # where osmosis is located
-bin_osmosis = dir_osmose + "/osmosis/osmosis-0.48.3-34-gb5383475-SNAPSHOT/bin/osmosis"
+bin_osmosis = (
+    f"{dir_osmose}/osmosis/osmosis-0.48.3-34-gb5383475-SNAPSHOT/bin/osmosis"
+)
 
 # where pyosmium_up_to_date is located
 bin_pyosmium_up_to_date = "pyosmium-up-to-date"

@@ -33,12 +33,11 @@ def to_mapcss(t):
             return "[index" + t['operator'] + to_mapcss(t['index']) + "]"
     elif t['type'] == 'simple_selector':
         return (
-            to_mapcss(t['type_selector']) +
-            to_mapcss(t['zoom_selector']) +
-            "".join(map(to_mapcss, t['class_selectors'])) +
-            "".join(map(lambda a: "[" + to_mapcss(a) + "]", t['predicates'])) +
-            "".join(map(to_mapcss, t['pseudo_class']))
-        )
+            to_mapcss(t['type_selector'])
+            + to_mapcss(t['zoom_selector'])
+            + "".join(map(to_mapcss, t['class_selectors']))
+            + "".join(map(lambda a: f"[{to_mapcss(a)}]", t['predicates']))
+        ) + "".join(map(to_mapcss, t['pseudo_class']))
     elif t['type'] == 'class_selector':
         return ("!" if t['not'] else "") + "." + t['class']
     elif t['type'] == 'predicate_simple':
@@ -69,10 +68,13 @@ def to_mapcss(t):
     elif t['type'] == 'valueExpression':
         if t['operator'] == '(':
             return "(" + to_mapcss(t['operands'][0]) + ")"
-        if not t['operator']:
-            return to_mapcss(t['operands'][0])
-        else:
-            return to_mapcss(t['operands'][0]) + t['operator'] + to_mapcss(t['operands'][1])
+        return (
+            to_mapcss(t['operands'][0])
+            + t['operator']
+            + to_mapcss(t['operands'][1])
+            if t['operator']
+            else to_mapcss(t['operands'][0])
+        )
     elif t['type'] == 'zoom_selector':
         return to_mapcss(t['value'])
     elif t['type'] == 'quoted':

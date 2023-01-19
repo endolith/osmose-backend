@@ -33,7 +33,7 @@ def dl(url, local, logger=OsmoseLog.logger(), min_file_size=10*1024):
     convert_pbf = False
 
     # file names
-    file_ts = local+".ts"
+    file_ts = f"{local}.ts"
     url_ext = os.path.splitext(url)[1]
     local_ext = os.path.splitext(local)[1]
     if (url_ext in [".bz2"]) and (local_ext not in [".bz2"]):
@@ -59,7 +59,7 @@ def dl(url, local, logger=OsmoseLog.logger(), min_file_size=10*1024):
         return False
     if not answer.ok:
         logger.log(u"got error %d" % answer.status_code)
-        logger.log(u"  URL=%s" % url)
+        logger.log(f"  URL={url}")
         answer.raise_for_status()
 
     url_ts = answer.headers.get('Last-Modified')
@@ -88,7 +88,9 @@ def dl(url, local, logger=OsmoseLog.logger(), min_file_size=10*1024):
     # convert pbf to osm
     if convert_pbf:
         logger.log(u"osmconvert")
-        subprocess.check_output("{} {} > {}".format(config.bin_osmconvert, file_dl, local), shell=True)
+        subprocess.check_output(
+            f"{config.bin_osmconvert} {file_dl} > {local}", shell=True
+        )
         os.remove(file_dl)
 
 

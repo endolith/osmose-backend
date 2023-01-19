@@ -33,21 +33,31 @@ class Analyser_Merge_Public_Equipment_FR_Montpellier_Toilets(Analyser_Merge_Poin
         self.init(
             u"http://data.montpellier3m.fr/dataset/toilettes-publiques-de-montpellier",
             u"Toilettes publiques",
-            GeoJSON(Source(attribution = u"Montpellier Mediterranée Métropole", millesime = "05/2019",
-                    fileUrl = u"http://data.montpellier3m.fr/sites/default/files/ressources/MMM_MTP_WC_Publics.json")),
-            Load_XY("geom_x", "geom_y",
-                select = {u'enservice': u'En Service'}),
+            GeoJSON(
+                Source(
+                    attribution=u"Montpellier Mediterranée Métropole",
+                    millesime="05/2019",
+                    fileUrl=u"http://data.montpellier3m.fr/sites/default/files/ressources/MMM_MTP_WC_Publics.json",
+                )
+            ),
+            Load_XY("geom_x", "geom_y", select={u'enservice': u'En Service'}),
             Conflate(
-                select = Select(
-                    types = ["nodes", "ways"],
-                    tags = {"amenity": "toilets"}),
-                conflationDistance = 100,
-                mapping = Mapping(
-                    static1 = {
-                        "amenity": "toilets",
-                        "access": "yes"},
-                    static2 = {"source": self.source},
-                    mapping1 = {
-                        "name": lambda res: res['nom'] if res['nom'] else None,
-                        "operator": lambda res: res['gestion'] if res['gestion'] else None,
-                        "wheelchair": lambda res: "yes" if res['pmr'] == u'PMR' else "no" if res['pmr'] == u'non PMR' else None } )))
+                select=Select(
+                    types=["nodes", "ways"], tags={"amenity": "toilets"}
+                ),
+                conflationDistance=100,
+                mapping=Mapping(
+                    static1={"amenity": "toilets", "access": "yes"},
+                    static2={"source": self.source},
+                    mapping1={
+                        "name": lambda res: res['nom'] or None,
+                        "operator": lambda res: res['gestion'] or None,
+                        "wheelchair": lambda res: "yes"
+                        if res['pmr'] == u'PMR'
+                        else "no"
+                        if res['pmr'] == u'non PMR'
+                        else None,
+                    },
+                ),
+            ),
+        )

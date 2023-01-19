@@ -76,11 +76,14 @@ class Analyser_Osmosis_Relation_Cyclic(Analyser_Osmosis):
 '''A relation whose members (eventually) refer back to itself is rarely correct.'''))
 
     def analyser_osmosis_common(self):
-        self.run(sql10, lambda res: {
-            "class": 2,
-            "data": [self.relation, self.positionAsText],
-            "text": {"en": res[2] + " > r" + str(res[0])}
-        })
+        self.run(
+            sql10,
+            lambda res: {
+                "class": 2,
+                "data": [self.relation, self.positionAsText],
+                "text": {"en": f"{res[2]} > r{str(res[0])}"},
+            },
+        )
 
 
 
@@ -93,8 +96,11 @@ class Test(TestAnalyserOsmosis):
     def setup_class(cls):
         from modules import config
         TestAnalyserOsmosis.setup_class()
-        cls.analyser_conf = cls.load_osm("tests/osmosis_relation_cyclic.osm",
-                                         config.dir_tmp + "/tests/osmosis_relation_cyclic.test.xml", {})
+        cls.analyser_conf = cls.load_osm(
+            "tests/osmosis_relation_cyclic.osm",
+            f"{config.dir_tmp}/tests/osmosis_relation_cyclic.test.xml",
+            {},
+        )
 
     def test_classes(self):
         with Analyser_Osmosis_Relation_Cyclic(self.analyser_conf, self.logger) as a:

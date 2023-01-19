@@ -47,7 +47,19 @@ class Analyser(object):
     @classmethod
     def def_class_(cls, config, back_in_stack = 2, **kwargs):
         # Check keys
-        diff_keys = set(kwargs.keys()) - set(['item', 'id', 'level', 'tags', 'title', 'detail', 'fix', 'trap', 'example', 'source', 'resource'])
+        diff_keys = set(kwargs.keys()) - {
+            'item',
+            'id',
+            'level',
+            'tags',
+            'title',
+            'detail',
+            'fix',
+            'trap',
+            'example',
+            'source',
+            'resource',
+        }
         if len(diff_keys) > 0:
             raise Exception('Unknow key ' + ', '.join(diff_keys))
 
@@ -72,10 +84,7 @@ class Analyser(object):
             if key not in docs:
                 continue
 
-            if key in base and key in docs:
-                base[key] = cls.merge_doc(base[key], docs[key])
-            elif key in docs:
-                base[key] = docs[key]
+            base[key] = cls.merge_doc(base[key], docs[key]) if key in base else docs[key]
         return base
 
     def open_error_file(self):
@@ -226,7 +235,7 @@ class TestAnalyser(unittest.TestCase):
             # skip conversion if analysers doesn't contain any analyser/analyserChange
             return
 
-        if not "analyser" in a["analysers"]:
+        if "analyser" not in a["analysers"]:
             a["analysers"]["analyser"] = a["analysers"]["analyserChange"]
 
         elif "analyserChange" in a["analysers"]:
@@ -356,8 +365,7 @@ class TestAnalyser(unittest.TestCase):
             if elems is not None:
                 xml_elems = []
                 for t in ("node", "way", "relation"):
-                    for err_elem in e.findall(t):
-                        xml_elems.append((t, err_elem.attrib["id"]))
+                    xml_elems.extend((t, err_elem.attrib["id"]) for err_elem in e.findall(t))
                 if set(elems) != set(xml_elems):
                     continue
             return True
@@ -369,11 +377,7 @@ class TestAnalyser(unittest.TestCase):
         if root_analyser is None:
             root_analyser = self.root_err.find("analyserChange")
 
-        if root_analyser is None:
-            xml_num = 0
-        else:
-            xml_num = len(root_analyser.findall('error'))
-
+        xml_num = 0 if root_analyser is None else len(root_analyser.findall('error'))
         if num is not None:
             self.assertEqual(xml_num, num, "Found {0} errors instead of {1}".format(xml_num, num))
         if min is not None:

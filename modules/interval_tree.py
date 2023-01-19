@@ -89,11 +89,7 @@ class IntervalTree(object):
             else:
                 return i.y1 > start and i.y2 <= stop
 
-        if self.intervals:
-            overlapping = list(filter(comp, self.intervals))
-        else:
-            overlapping = []
-
+        overlapping = list(filter(comp, self.intervals)) if self.intervals else []
         if self.left and start <= self.center:
             overlapping += self.left.find(start, stop)
 
@@ -104,12 +100,12 @@ class IntervalTree(object):
 
     def __iter__(self):
         if self.left:
-            for l in self.left: yield l
+            yield from self.left
 
-        for i in self.intervals: yield i
+        yield from self.intervals
 
         if self.right:
-            for r in self.right: yield r
+            yield from self.right
 
     # methods to allow un/pickling (by pzs):
     def __getstate__(self):

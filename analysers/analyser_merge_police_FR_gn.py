@@ -78,12 +78,18 @@ class Analyser_Merge_Police_FR_gn(Analyser_Merge_Point):
             hours_list = []
             for a_day in OSM_DAYS_FR:
                 hours = ''
-                if line[a_day + '_plage1_fin']:
-                    hours += '{}-{}'.format(line[a_day + '_plage1_debut'], line[a_day + '_plage1_fin'])
-                if line[a_day + '_plage2_fin']:
-                    hours += ',{}-{}'.format(line[a_day + '_plage2_debut'], line[a_day + '_plage2_fin'])
-                if line[a_day + '_plage3_fin']:
-                    hours += ',{}-{}'.format(line[a_day + '_plage3_debut'], line[a_day + '_plage3_fin'])
+                if line[f'{a_day}_plage1_fin']:
+                    hours += '{}-{}'.format(
+                        line[f'{a_day}_plage1_debut'], line[f'{a_day}_plage1_fin']
+                    )
+                if line[f'{a_day}_plage2_fin']:
+                    hours += ',{}-{}'.format(
+                        line[f'{a_day}_plage2_debut'], line[f'{a_day}_plage2_fin']
+                    )
+                if line[f'{a_day}_plage3_fin']:
+                    hours += ',{}-{}'.format(
+                        line[f'{a_day}_plage3_debut'], line[f'{a_day}_plage3_fin']
+                    )
                 hours_list.append({'hours': hours.replace('h', ':'), 'day': OSM_DAYS[a_day]})
 
             hours_text = ''
@@ -111,7 +117,7 @@ class Analyser_Merge_Police_FR_gn(Analyser_Merge_Point):
                 hours_text += '{} {}'.format(hours_list[7]['day'], hours_list[7]['hours'])
 
             if hours_text.endswith('; '):
-                hours_text = hours_text[0:-2]
+                hours_text = hours_text[:-2]
 
             if not hours_text:
                 hours_text = None

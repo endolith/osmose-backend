@@ -107,7 +107,12 @@ class Analyser_Merge_Network(Analyser_Merge):
         self.run(sql10.format(buffer = self.conflate.conflationDistance))
         self.run(sql11)
         self.run(sql20.format(table))
-        self.run(sql21.format(minLength = self.conflate.minLength if self.conflate.minLength else 2 * self.conflate.conflationDistance))
+        self.run(
+            sql21.format(
+                minLength=self.conflate.minLength
+                or 2 * self.conflate.conflationDistance
+            )
+        )
         self.run(sql30, lambda res: {
             "class": self.missing_official['id'],
             "subclass": str(stablehash64("{0}{1}{2}".format(

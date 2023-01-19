@@ -35,10 +35,8 @@ class PolygonFilter(IssuesFilter):
     def apply(self, classs, subclass, geom):
         if "position" not in geom:
             return False
-        else:
-            inside = False
-            for position in geom["position"]:
-                lat = float(position["lat"])
-                lon = float(position["lon"])
-                inside |= self.pip.point_inside_polygon(lon, lat)
-            return inside
+        inside = False
+        for position in geom["position"]:
+            lat = float(position["lat"])
+            inside |= self.pip.point_inside_polygon(float(position["lon"]), lat)
+        return inside

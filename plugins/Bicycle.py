@@ -133,7 +133,7 @@ class Bicycle(PluginMapCSS):
 
         # way[cycleway=~/opposite|opposite_lane/][!oneway]
         # way[cycleway=~/opposite|opposite_lane/][oneway=no]
-        if ('cycleway' in keys) or ('cycleway' in keys and 'oneway' in keys):
+        if 'cycleway' in keys:
             match = False
             if not match:
                 capture_tags = {}

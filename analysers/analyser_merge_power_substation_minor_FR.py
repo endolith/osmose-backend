@@ -37,29 +37,43 @@ class Analyser_Merge_Power_Substation_minor_FR(Analyser_Merge_Point):
         self.init(
             "https://opendata.agenceore.fr/explore/dataset/postes-de-distribution-publique-postes-htabt/",
             "Postes HTA/BT",
-            CSV(SourceOpenDataSoft(
-                attribution="Exploitants contributeurs de l'Agence ORE",
-                url="https://opendata.agenceore.fr/explore/dataset/postes-de-distribution-publique-postes-htabt/"),
-                fields=["Geo Point", "GRD", "Nom poste"]),
-            Load_XY("Geo Point", "Geo Point",
-                xFunction = lambda x: x and x.split(',')[1],
-                yFunction = lambda y: y and y.split(',')[0]),
+            CSV(
+                SourceOpenDataSoft(
+                    attribution="Exploitants contributeurs de l'Agence ORE",
+                    url="https://opendata.agenceore.fr/explore/dataset/postes-de-distribution-publique-postes-htabt/",
+                ),
+                fields=["Geo Point", "GRD", "Nom poste"],
+            ),
+            Load_XY(
+                "Geo Point",
+                "Geo Point",
+                xFunction=lambda x: x and x.split(',')[1],
+                yFunction=lambda y: y and y.split(',')[0],
+            ),
             Conflate(
-                select = Select(
-                    types = ["nodes", "ways"],
-                    tags = [
-                        {"power": "substation", "substation": "minor_distribution"},
+                select=Select(
+                    types=["nodes", "ways"],
+                    tags=[
+                        {
+                            "power": "substation",
+                            "substation": "minor_distribution",
+                        },
                         {"power": None, "transformer": ["distribution", "main"]},
-                        {"power": "substation", "substation": "distribution"}]),
-                conflationDistance = 50,
-                mapping = Mapping(
-                    static1 = {
-                        "power": "substation",
-                        "voltage": "20000"},
-                    static2 = {
-                        "substation": "minor_distribution"},
-                    mapping2 = {
+                        {"power": "substation", "substation": "distribution"},
+                    ],
+                ),
+                conflationDistance=50,
+                mapping=Mapping(
+                    static1={"power": "substation", "voltage": "20000"},
+                    static2={"substation": "minor_distribution"},
+                    mapping2={
                         "operator": "GRD",
-                        "source": lambda fields: self.source() + " - " + fields["GRD"],
-                        "name": lambda fields: fields["Nom poste"] if fields["Nom poste"] != "" else None},
-                )))
+                        "source": lambda fields: f"{self.source()} - "
+                        + fields["GRD"],
+                        "name": lambda fields: fields["Nom poste"]
+                        if fields["Nom poste"] != ""
+                        else None,
+                    },
+                ),
+            ),
+        )

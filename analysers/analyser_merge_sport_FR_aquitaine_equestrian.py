@@ -33,22 +33,52 @@ class Analyser_Merge_Sport_FR_Aquitaine_Equestrian(Analyser_Merge_Point):
         self.init(
             u"http://catalogue.datalocale.fr/dataset/liste-des-activites-de-pratique-equestre-en-aquitaine",
             u"Liste des activités de pratique équestre en aquitaine",
-            JSON(Source(attribution = u"Réseau SIRTAQUI - Comité Régional de Tourisme d'Aquitaine - www.sirtaqui-aquitaine.com", millesime = "08/2018",
-                    fileUrl = u"http://wcf.tourinsoft.com/Syndication/aquitaine/3db03dc1-a2aa-415f-b219-53f70d387b53/Objects?$format=json"),
-                extractor = lambda json: json['d']),
-            Load_XY("LON", "LAT",
-                xFunction = Load_XY.degree,
-                yFunction = Load_XY.degree),
+            JSON(
+                Source(
+                    attribution=u"Réseau SIRTAQUI - Comité Régional de Tourisme d'Aquitaine - www.sirtaqui-aquitaine.com",
+                    millesime="08/2018",
+                    fileUrl=u"http://wcf.tourinsoft.com/Syndication/aquitaine/3db03dc1-a2aa-415f-b219-53f70d387b53/Objects?$format=json",
+                ),
+                extractor=lambda json: json['d'],
+            ),
+            Load_XY(
+                "LON", "LAT", xFunction=Load_XY.degree, yFunction=Load_XY.degree
+            ),
             Conflate(
-                select = Select(
-                    types = ["nodes", "ways"],
-                    tags = {"sport": "equestrian"}),
-                conflationDistance = 1000,
-                mapping = Mapping(
-                    static1 = {"sport": "equestrian"},
-                    static2 = {"source": self.source},
-                    mapping1 = {
+                select=Select(
+                    types=["nodes", "ways"], tags={"sport": "equestrian"}
+                ),
+                conflationDistance=1000,
+                mapping=Mapping(
+                    static1={"sport": "equestrian"},
+                    static2={"source": self.source},
+                    mapping1={
                         "name": "NOMOFFRE",
                         "ref:FR:CRTA": "SyndicObjectID",
-                        "website": lambda fields: None if not fields["URL"] else fields["URL"] if fields["URL"].startswith('http') else 'http://' + fields["URL"]},
-                    text = lambda tags, fields: {"en": ', '.join(filter(lambda x: x, [fields["NOMOFFRE"], fields["AD1"], fields["AD1SUITE"], fields["AD2"], fields["AD3"], fields["CP"], fields["COMMUNE"]]))} )))
+                        "website": lambda fields: (
+                            fields["URL"]
+                            if fields["URL"].startswith('http')
+                            else 'http://' + fields["URL"]
+                        )
+                        if fields["URL"]
+                        else None,
+                    },
+                    text=lambda tags, fields: {
+                        "en": ', '.join(
+                            filter(
+                                lambda x: x,
+                                [
+                                    fields["NOMOFFRE"],
+                                    fields["AD1"],
+                                    fields["AD1SUITE"],
+                                    fields["AD2"],
+                                    fields["AD3"],
+                                    fields["CP"],
+                                    fields["COMMUNE"],
+                                ],
+                            )
+                        )
+                    },
+                ),
+            ),
+        )

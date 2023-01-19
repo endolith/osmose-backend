@@ -57,13 +57,13 @@ class MissingDataError(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
-        return "MissingDataError(%s)" % str(self.value)
+        return f"MissingDataError({str(self.value)})"
 
 class RelationLoopError(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
-        return "RelationLoopError(%s)" % str(self.value)
+        return f"RelationLoopError({str(self.value)})"
 
 ###########################################################################
 ## Common functions
@@ -153,20 +153,18 @@ def InitFolder(folder):
     print("Creating node.crd")
     groupe = 2**10
     k = _IntToBytes4(0) * 2 * groupe
-    f = open(os.path.join(folder, "node.crd"), "wb")
-    for i in range(nb_node_max//groupe):
-        f.write(k)
-    f.close()
+    with open(os.path.join(folder, "node.crd"), "wb") as f:
+        for _ in range(nb_node_max//groupe):
+            f.write(k)
     del k
 
     # create way.idx
     print("Creating way.idx")
     groupe = 1000
     k = _IntToBytes5(0) * groupe
-    f = open(os.path.join(folder, "way.idx"), "wb")
-    for i in range(nb_way_max//groupe):
-        f.write(k)
-    f.close()
+    with open(os.path.join(folder, "way.idx"), "wb") as f:
+        for _ in range(nb_way_max//groupe):
+            f.write(k)
     del k
 
     # reset way.data
@@ -209,9 +207,7 @@ class OsmBin:
             del self._lock
 
     def _ReadFree(self):
-        self._free = {}
-        for nbn in range(2001):
-            self._free[nbn] = []
+        self._free = {nbn: [] for nbn in range(2001)}
         f = open(os.path.join(self._folder, "way.free"))
         while True:
             line = f.readline()
@@ -225,11 +221,10 @@ class OsmBin:
             self._free
         except AttributeError:
             return
-        f = open(os.path.join(self._folder, "way.free"), 'w')
-        for nbn in self._free:
-            for ptr in self._free[nbn]:
-                f.write("%d;%d\n" % (ptr, nbn))
-        f.close()
+        with open(os.path.join(self._folder, "way.free"), 'w') as f:
+            for nbn in self._free:
+                for ptr in self._free[nbn]:
+                    f.write("%d;%d\n" % (ptr, nbn))
 
     def begin(self):
         pass
@@ -241,8 +236,7 @@ class OsmBin:
     ## node functions
 
     def NodeGet(self, NodeId):
-        data = {}
-        data["id"] = NodeId
+        data = {"id": NodeId}
         self._fNode_crd.seek(8*data[u"id"])
         read = self._fNode_crd.read(8)
         if len(read) != 8:
@@ -277,9 +271,10 @@ class OsmBin:
         self._fWay_data.seek(AdrWay)
         nbn  = _Bytes2ToInt(self._fWay_data.read(2))
         data = self._fWay_data.read(self.node_id_size*nbn)
-        nds = []
-        for i in range(nbn):
-            nds.append(_Bytes5ToInt(data[self.node_id_size*i:self.node_id_size*(i+1)]))
+        nds = [
+            _Bytes5ToInt(data[self.node_id_size * i : self.node_id_size * (i + 1)])
+            for i in range(nbn)
+        ]
         return {"id": WayId, "nd": nds, "tag":{}}
 
     def WayCreate(self, data):
@@ -326,7 +321,7 @@ class OsmBin:
 
     def RelationGet(self, RelationId, dump_sub_elements=False):
         RelationId = "%09d" % RelationId
-        RelFolder  = self._reldir + "/" + RelationId[0:3] + "/" + RelationId[3:6] + "/"
+        RelFolder = f"{self._reldir}/{RelationId[:3]}/{RelationId[3:6]}/"
         RelFile    = RelationId[6:9]
         if os.path.exists(RelFolder + RelFile):
             return eval(open(RelFolder + RelFile).read())
@@ -335,7 +330,7 @@ class OsmBin:
 
     def RelationCreate(self, data):
         RelationId = "%09d" % data["id"]
-        RelFolder  = self._reldir + "/" + RelationId[0:3] + "/" + RelationId[3:6] + "/"
+        RelFolder = f"{self._reldir}/{RelationId[:3]}/{RelationId[3:6]}/"
         RelFile    = RelationId[6:9]
         if not os.path.exists(RelFolder):
             os.makedirs(RelFolder)
@@ -345,7 +340,7 @@ class OsmBin:
 
     def RelationDelete(self, data):
         RelationId = "%09d" % data["id"]
-        RelFolder  = self._reldir + "/" + RelationId[0:3] + "/" + RelationId[3:6] + "/"
+        RelFolder = f"{self._reldir}/{RelationId[:3]}/{RelationId[3:6]}/"
         RelFile    = RelationId[6:9]
         try:
             os.remove(RelFolder + RelFile)
@@ -370,7 +365,7 @@ class OsmBin:
                 if m["ref"] == RelationId:
                     if not RaiseOnLoop:
                         continue
-                    raise RelationLoopError('self member '+str(RelationId))
+                    raise RelationLoopError(f'self member {str(RelationId)}')
                 if m["ref"] in RecurControl:
                     if not RaiseOnLoop:
                         continue
@@ -392,15 +387,14 @@ class OsmBin:
         self._fWay_idx.seek(0,2)
         way_idx_size = self._fWay_idx.tell()
         for i in range(way_idx_size // 5):
-            way = self.WayGet(i)
-            if way:
+            if way := self.WayGet(i):
                 output.WayCreate(way)
 
     def CopyRelationTo(self, output):
         for i in os.listdir(self._reldir):
-            for j in os.listdir(self._reldir+"/"+i):
-                for k in os.listdir(self._reldir+"/"+i+"/"+j):
-                    output.RelationCreate(eval(open(self._reldir+"/"+i+"/"+j+"/"+k).read()))
+            for j in os.listdir(f"{self._reldir}/{i}"):
+                for k in os.listdir(f"{self._reldir}/{i}/{j}"):
+                    output.RelationCreate(eval(open(f"{self._reldir}/{i}/{j}/{k}").read()))
 
     def Import(self, f):
         i = OsmReader.open(f)
@@ -408,10 +402,7 @@ class OsmBin:
 
     def Update(self, f):
         from . import OsmSax
-        if f == "-":
-            i = OsmSax.OscSaxReader(sys.stdin)
-        else:
-            i = OsmSax.OscSaxReader(f)
+        i = OsmSax.OscSaxReader(sys.stdin) if f == "-" else OsmSax.OscSaxReader(f)
         i.CopyTo(self)
 
 
@@ -476,7 +467,7 @@ class Test(unittest.TestCase):
     def setUp(self):
         import shutil
         from modules import config
-        self.test_dir = config.dir_tmp + "/tests/osmbin/"
+        self.test_dir = f"{config.dir_tmp}/tests/osmbin/"
         shutil.rmtree(self.test_dir, True)
         InitFolder(self.test_dir)
         self.a = OsmBin(self.test_dir, "w")
@@ -497,10 +488,9 @@ class Test(unittest.TestCase):
             if expected:
                 self.assertEqual(res["lat"], expected["lat"])
                 self.assertEqual(res["lon"], expected["lon"])
-        else:
-            if res:
-                self.assertEqual(res["lat"], _Bytes4ToCoord(_IntToBytes4(0)))
-                self.assertEqual(res["lon"], _Bytes4ToCoord(_IntToBytes4(0)))
+        elif res:
+            self.assertEqual(res["lat"], _Bytes4ToCoord(_IntToBytes4(0)))
+            self.assertEqual(res["lon"], _Bytes4ToCoord(_IntToBytes4(0)))
 
     def check_way(self, func, id, exists=True, expected=None):
         res = func(id)

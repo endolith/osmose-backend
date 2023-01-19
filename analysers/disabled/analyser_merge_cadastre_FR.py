@@ -33,18 +33,29 @@ class _Analyser_Merge_Cadastre_Point_ID_calvaire_FR(Analyser_Merge):
         self.init(
             u"https://www.data.gouv.fr/fr/datasets/58e5924b88ee3802ca255566/",
             u"PCI Vecteur (Plan Cadastral Informatisé) - Point_id",
-            CSV(Source(attribution = u"Ministère de l’Economie et des Finances", millesime = "10/2017", file = "cadastre_TPOINT_id_clean.csv.bz2", bz2 = True)),
-            Load("X", "Y",
-                select = {"tex": "%calvaire%"}),
+            CSV(
+                Source(
+                    attribution=u"Ministère de l’Economie et des Finances",
+                    millesime="10/2017",
+                    file="cadastre_TPOINT_id_clean.csv.bz2",
+                    bz2=True,
+                )
+            ),
+            Load("X", "Y", select={"tex": "%calvaire%"}),
             Conflate(
-                select = Select(
-                    types = ["nodes", "ways"],
-                    tags = {"historic": "wayside_cross"}),
-                conflationDistance = 200,
-                mapping = Mapping(
-                    static1 = {"historic": "wayside_cross"},
-                    static2 = {"source": self.source},
-                text = lambda tags, fields: {"en": u"%s, confidence: %s" % (fields["tex"], 1)} )))
+                select=Select(
+                    types=["nodes", "ways"], tags={"historic": "wayside_cross"}
+                ),
+                conflationDistance=200,
+                mapping=Mapping(
+                    static1={"historic": "wayside_cross"},
+                    static2={"source": self.source},
+                    text=lambda tags, fields: {
+                        "en": f'{fields["tex"]}, confidence: 1'
+                    },
+                ),
+            ),
+        )
 
 class Analyser_Merge_Cadastre_Point_ID_borne_incendie_FR(Analyser_Merge):
     def __init__(self, config, logger = None):
@@ -55,15 +66,24 @@ class Analyser_Merge_Cadastre_Point_ID_borne_incendie_FR(Analyser_Merge):
         self.init(
             u"https://www.data.gouv.fr/fr/datasets/58e5924b88ee3802ca255566/",
             u"PCI Vecteur (Plan Cadastral Informatisé) - Point_id",
-            CSV(Source(attribution = u"Ministère de l’Economie et des Finances", millesime = "10/2017", file = "cadastre_TPOINT_id_clean.csv.bz2", bz2 = True)),
-            Load("X", "Y",
-                select = {"tex": "%borne incendie%"}),
+            CSV(
+                Source(
+                    attribution=u"Ministère de l’Economie et des Finances",
+                    millesime="10/2017",
+                    file="cadastre_TPOINT_id_clean.csv.bz2",
+                    bz2=True,
+                )
+            ),
+            Load("X", "Y", select={"tex": "%borne incendie%"}),
             Conflate(
-                select = Select(
-                    types = ["nodes"],
-                    tags = {"emergency": "ire_hydrant"}),
-                conflationDistance = 200,
-                mapping = Mapping(
-                    static1 = {"emergency": "fire_hydrant"},
-                    static2 = {"source": self.source},
-                text = lambda tags, fields: {"en": u"%s, confidence: %s" % (fields["tex"], 1)} )))
+                select=Select(types=["nodes"], tags={"emergency": "ire_hydrant"}),
+                conflationDistance=200,
+                mapping=Mapping(
+                    static1={"emergency": "fire_hydrant"},
+                    static2={"source": self.source},
+                    text=lambda tags, fields: {
+                        "en": f'{fields["tex"]}, confidence: 1'
+                    },
+                ),
+            ),
+        )

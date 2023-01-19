@@ -45,8 +45,9 @@ class Cuisine_Guess(Plugin):
         if 'name' not in tags or tags.get('amenity') not in ('restaurant', 'fast_food'):
             return
 
-        cuisine_guess = self.taster.guess(tags['name'], tags['amenity'], tags.get('takeaway'))
-        if cuisine_guess:
+        if cuisine_guess := self.taster.guess(
+            tags['name'], tags['amenity'], tags.get('takeaway')
+        ):
             tasty_cuisines = None
             if 'cuisine' in tags:
                 max_score = max(map(lambda c: c[1], cuisine_guess.items()))

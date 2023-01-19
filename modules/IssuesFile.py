@@ -34,7 +34,6 @@ class IssuesFile:
                 self.filter = PolygonFilter(polygon_id)
             except Exception as e:
                 print(e)
-                pass
 
     def begin(self):
         if isinstance(self.dst, str):
@@ -91,10 +90,11 @@ class IssuesFile:
             i = 0
             for f in fix:
                 if f is not None and i < len(types):
-                    osm_obj = next((x for x in geom[types[i]] if x['id'] == ids[i]), None)
-                    if osm_obj:
+                    if osm_obj := next(
+                        (x for x in geom[types[i]] if x['id'] == ids[i]), None
+                    ):
                         fix_tags = f['+'].keys() if '+' in f else []
-                        if len(set(osm_obj['tag'].keys()).intersection(fix_tags)) > 0:
+                        if set(osm_obj['tag'].keys()).intersection(fix_tags):
                             # Fix try to override existing tag in object, drop the fix
                             i = 0
                             break
@@ -115,7 +115,7 @@ class Test(unittest.TestCase):
         d = self.a.fixdiff(b)
         pp = pprint.PrettyPrinter(indent=4)
         pp.pprint(d)
-        self.assertEqual(c, d, "fixdiff Excepted %s to %s but get %s" % (b, c, d))
+        self.assertEqual(c, d, f"fixdiff Excepted {b} to {c} but get {d}")
 
     def test(self):
         self.check([[None]], [[None]] )

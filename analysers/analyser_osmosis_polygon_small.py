@@ -116,9 +116,11 @@ class Test(TestAnalyserOsmosis):
     def setup_class(cls):
         from modules import config
         TestAnalyserOsmosis.setup_class()
-        cls.analyser_conf = cls.load_osm("tests/osmosis_polygon_small.osm",
-                                         config.dir_tmp + "/tests/osmosis_polygon_small.test.xml",
-                                         {"proj": 23032})
+        cls.analyser_conf = cls.load_osm(
+            "tests/osmosis_polygon_small.osm",
+            f"{config.dir_tmp}/tests/osmosis_polygon_small.test.xml",
+            {"proj": 23032},
+        )
 
     def test_classes(self):
         with Analyser_Osmosis_Polygon_Small(self.analyser_conf, self.logger) as a:

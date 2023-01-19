@@ -35,24 +35,15 @@ def data2dict(data):
 
 def get_ways(relid, bin):
     data = bin.RelationFullRecur(relid, WayNodes = False, RaiseOnLoop = False, RemoveSubarea = True)
-    ways = []
-    for x in data:
-        if x["type"] == "way":
-            ways.append(x["data"])
-    return ways
+    return [x["data"] for x in data if x["type"] == "way"]
 
 def ways_bounds(ways):
     nodes = []
     for w in ways:
         if not w[u"nd"]:
             continue
-        nodes.append(w[u"nd"][0])
-        nodes.append(w[u"nd"][-1])
-    err = []
-    for n in set(nodes):
-        if (nodes.count(n) % 2) == 1:
-            err.append((n, nodes.count(n)))
-    return err
+        nodes.extend((w[u"nd"][0], w[u"nd"][-1]))
+    return [(n, nodes.count(n)) for n in set(nodes) if (nodes.count(n) % 2) == 1]
 
 ###########################################################################
 
@@ -61,16 +52,16 @@ class Analyser_OsmBin_Open_Relations(Analyser):
     def analyser(self, osmbin_path="/data/work/osmbin/data/"):
         timestamp = datetime.datetime.now()
         self.error_file.analyser(timestamp, self.analyser_version())
-        doc6010 = dict(
-            detail = T_(
-'''A relation that should be a closed polygon and it is not. An issue is
+            doc6010 = dict(
+                detail = T_(
+        '''A relation that should be a closed polygon and it is not. An issue is
 reported at each end of open part.'''))
         self.error_file.classs(id = 1, item = 6010, level = 3, tags = ['geom', 'boundary'],
             title = T_('Open relation type=boundary'),
             **doc6010)
         self.error_file.classs(id = 5, item = 1170, level = 2, tags = ['geom'],
             title = T_('Open relation type=multipolygon'))
-        for admin_level in range(0, 15):
+        for admin_level in range(15):
             if admin_level <= 6:
                 level = 1
             elif admin_level <= 8:
@@ -93,7 +84,7 @@ reported at each end of open part.'''))
 
     def RelationCreate(self, data):
 
-        if data[u"tag"].get(u"type", None) != u"boundary" and data[u"tag"].get(u"type", None) != u"multipolygon":
+        if data[u"tag"].get(u"type", None) not in [u"boundary", u"multipolygon"]:
             return
 
         try:
@@ -118,8 +109,7 @@ reported at each end of open part.'''))
                 pass
 
         for nid, cpt in bnds:
-            ndata = self.bin.NodeGet(nid)
-            if ndata:
+            if ndata := self.bin.NodeGet(nid):
                 if ndata["lat"] > 90 or ndata["lat"] < -90:
                     print("Incorrect node found on relation", data["id"])
                     print(ndata)
@@ -141,19 +131,17 @@ class Test(TestAnalyser):
         import os
         import shutil
         from modules import config
-        self.test_dir = config.dir_tmp + "/tests/osmbin/"
+        self.test_dir = f"{config.dir_tmp}/tests/osmbin/"
         shutil.rmtree(self.test_dir, True)
         OsmBin.InitFolder(self.test_dir)
         self.o = OsmBin.OsmBin(self.test_dir, "w")
         self.o.Import("tests/osmbin_open_relations.osm")
         del self.o
-        dirname = config.dir_tmp + "/tests/"
+        dirname = f"{config.dir_tmp}/tests/"
         try:
             os.makedirs(dirname)
         except OSError:
-            if os.path.isdir(dirname):
-                pass
-            else:
+            if not os.path.isdir(dirname):
                 raise
         self.xml_res_file = os.path.join(dirname, "osmbin_open_relations.test.xml")
         (self.conf, self.analyser_config) = self.init_config(dst=self.xml_res_file)

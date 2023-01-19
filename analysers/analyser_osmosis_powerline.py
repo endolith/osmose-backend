@@ -431,8 +431,10 @@ class Test(TestAnalyserOsmosis):
     def setup_class(cls):
         from modules import config
         TestAnalyserOsmosis.setup_class()
-        cls.analyser_conf = cls.load_osm("tests/osmosis_powerline_voltage.test.osm",
-                                         config.dir_tmp + "/tests/osmosis_powerline_voltage.test.xml")
+        cls.analyser_conf = cls.load_osm(
+            "tests/osmosis_powerline_voltage.test.osm",
+            f"{config.dir_tmp}/tests/osmosis_powerline_voltage.test.xml",
+        )
 
     def test_class3(self):
         with Analyser_Osmosis_Powerline(self.analyser_conf, self.logger) as a:

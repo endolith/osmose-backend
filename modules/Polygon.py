@@ -35,9 +35,9 @@ class Polygon:
 
         polygon_url = u"http://polygons.openstreetmap.fr/"
         for id in polygon_id:
-            url = polygon_url + "index.py?id="+str(id)
+            url = f"{polygon_url}index.py?id={str(id)}"
             downloader.urlread(url, cache_delay)
-        url = polygon_url + "get_wkt.py?params=0&id=" + ",".join(map(str, polygon_id))
+        url = f"{polygon_url}get_wkt.py?params=0&id=" + ",".join(map(str, polygon_id))
         self.wkt = wkt = downloader.urlread(url, cache_delay)
         if wkt.startswith("SRID="):
             wkt = wkt.split(";", 1)[1]
@@ -58,21 +58,20 @@ class Polygon:
 
     def bboxes(self):
         bbox = self.polygon.bounds
-        if not (bbox[0] < -179 and bbox[2] > 179):
+        if bbox[0] >= -179 or bbox[2] <= 179:
             return [bbox]
-        else: # Cross the 180°
-            negative = []
-            positive = []
-            for polygon in self.polygon.geoms:
-                sub_bbox = polygon.bounds
-                if sub_bbox[0] < 0:
-                    negative.append(polygon)
-                else:
-                    positive.append(polygon)
-            return [
-                MultiPolygon(negative).bounds,
-                MultiPolygon(positive).bounds,
-            ]
+        negative = []
+        positive = []
+        for polygon in self.polygon.geoms:
+            sub_bbox = polygon.bounds
+            if sub_bbox[0] < 0:
+                negative.append(polygon)
+            else:
+                positive.append(polygon)
+        return [
+            MultiPolygon(negative).bounds,
+            MultiPolygon(positive).bounds,
+        ]
 
 
 ###########################################################################

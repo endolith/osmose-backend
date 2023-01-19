@@ -25,7 +25,7 @@ from .Analyser_Merge import Analyser_Merge_Point, Source, CSV, Load_XY, Conflate
 
 def transform_phone(phone_number):
     if len(phone_number) > 6 and phone_number.startswith("0"):
-        return "+33 " + phone_number[1:]
+        return f"+33 {phone_number[1:]}"
     else:
         return phone_number
 

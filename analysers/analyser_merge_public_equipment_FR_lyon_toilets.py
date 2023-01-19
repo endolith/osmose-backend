@@ -29,9 +29,8 @@ class Analyser_Merge_Public_Equipment_FR_Lyon_Toilets(Analyser_Merge_Point):
     def ohToStr(self, oh):
         if not oh:
             return None
-        else:
-            theJson = json.loads(oh.replace("'", '"'))
-            return "Opens: " + " | ".join(map(lambda s: s['opens'] + " to " + s['closes'] + " (" + ", ".join(map(lambda x: x[18:], s['dayOfWeek'])) + ")", theJson))
+        theJson = json.loads(oh.replace("'", '"'))
+        return "Opens: " + " | ".join(map(lambda s: s['opens'] + " to " + s['closes'] + " (" + ", ".join(map(lambda x: x[18:], s['dayOfWeek'])) + ")", theJson))
 
     def __init__(self, config, logger = None):
         Analyser_Merge_Point.__init__(self, config, logger)

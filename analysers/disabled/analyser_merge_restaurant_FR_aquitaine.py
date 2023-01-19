@@ -33,33 +33,96 @@ class Analyser_Merge_Restaurant_FR_aquitaine(Analyser_Merge):
         self.init(
             u"http://catalogue.datalocale.fr/dataset/liste-restaurants-aquitaine",
             u"Liste des restaurants en Aquitaine",
-            JSON(Source(attribution = u"Réseau SIRTAQUI - Comité Régional de Tourisme d'Aquitaine - www.sirtaqui-aquitaine.com", millesime = "06/2016",
-                    fileUrl = u"http://wcf.tourinsoft.com/Syndication/aquitaine/e150e425-fbb6-4e32-916b-5bfc47171c3c/Objects?$format=json"),
-                extractor = lambda json: json['d']),
-            Load("LON", "LAT",
-                select = {
-                    'TYPRES': [u"Restaurant", u"Hôtel restaurant", u"Ferme auberge"],
-                    'CATRES': list(self.amenity_type.keys())},
-                xFunction = Load.degree,
-                yFunction = Load.degree),
+            JSON(
+                Source(
+                    attribution=u"Réseau SIRTAQUI - Comité Régional de Tourisme d'Aquitaine - www.sirtaqui-aquitaine.com",
+                    millesime="06/2016",
+                    fileUrl=u"http://wcf.tourinsoft.com/Syndication/aquitaine/e150e425-fbb6-4e32-916b-5bfc47171c3c/Objects?$format=json",
+                ),
+                extractor=lambda json: json['d'],
+            ),
+            Load(
+                "LON",
+                "LAT",
+                select={
+                    'TYPRES': [
+                        u"Restaurant",
+                        u"Hôtel restaurant",
+                        u"Ferme auberge",
+                    ],
+                    'CATRES': list(self.amenity_type.keys()),
+                },
+                xFunction=Load.degree,
+                yFunction=Load.degree,
+            ),
             Conflate(
-                select = Select(
-                    types = ["nodes", "ways"],
-                    tags = {"amenity": ["restaurant", "fast_food", "bar", "pub", "cafe"]}),
-                conflationDistance = 200,
-                mapping = Mapping(
-                    static2 = {"source": self.source},
-                    mapping1 = {
-                        "amenity": lambda fields: self.amenity_type[fields["CATRES"]],
+                select=Select(
+                    types=["nodes", "ways"],
+                    tags={
+                        "amenity": [
+                            "restaurant",
+                            "fast_food",
+                            "bar",
+                            "pub",
+                            "cafe",
+                        ]
+                    },
+                ),
+                conflationDistance=200,
+                mapping=Mapping(
+                    static2={"source": self.source},
+                    mapping1={
+                        "amenity": lambda fields: self.amenity_type[
+                            fields["CATRES"]
+                        ],
                         "name": "NOMOFFRE",
                         "ref:FR:CRTA": "SyndicObjectID",
-                        "tourism": lambda fields: "hotel" if fields["TYPRES"] == u"Hôtel restaurant" else None,
+                        "tourism": lambda fields: "hotel"
+                        if fields["TYPRES"] == u"Hôtel restaurant"
+                        else None,
                         "cuisine": lambda fields: self.cuisine(fields),
-                        "diet:kosher": lambda fields: "yes" if fields["SPECIALITES"] and u"Cuisine casher" in fields["SPECIALITES"] else None,
-                        "diet:vegetarian ": lambda fields: "yes" if fields["SPECIALITES"] and u"Cuisine végétarienne" in fields["SPECIALITES"] else None,
-                        "organic": lambda fields: "only" if fields["SPECIALITES"] and u"Cuisine bio" in fields["SPECIALITES"] else None,
-                        "website": lambda fields: None if not fields["URL"] else fields["URL"] if fields["URL"].startswith('http') else 'http://' + fields["URL"]},
-                    text = lambda tags, fields: {"en": ', '.join(filter(lambda x: x, [fields["TYPRES"], fields["CATRES"], fields["SPECIALITES"], fields["NOMOFFRE"], fields["AD1"], fields["AD1SUITE"], fields["AD2"], fields["AD3"], fields["CP"], fields["COMMUNE"]]))} )))
+                        "diet:kosher": lambda fields: "yes"
+                        if fields["SPECIALITES"]
+                        and u"Cuisine casher" in fields["SPECIALITES"]
+                        else None,
+                        "diet:vegetarian ": lambda fields: "yes"
+                        if fields["SPECIALITES"]
+                        and u"Cuisine végétarienne" in fields["SPECIALITES"]
+                        else None,
+                        "organic": lambda fields: "only"
+                        if fields["SPECIALITES"]
+                        and u"Cuisine bio" in fields["SPECIALITES"]
+                        else None,
+                        "website": lambda fields: (
+                            fields["URL"]
+                            if fields["URL"].startswith('http')
+                            else 'http://' + fields["URL"]
+                        )
+                        if fields["URL"]
+                        else None,
+                    },
+                    text=lambda tags, fields: {
+                        "en": ', '.join(
+                            filter(
+                                lambda x: x,
+                                [
+                                    fields["TYPRES"],
+                                    fields["CATRES"],
+                                    fields["SPECIALITES"],
+                                    fields["NOMOFFRE"],
+                                    fields["AD1"],
+                                    fields["AD1SUITE"],
+                                    fields["AD2"],
+                                    fields["AD3"],
+                                    fields["CP"],
+                                    fields["COMMUNE"],
+                                ],
+                            )
+                        )
+                    },
+                ),
+            ),
+        )
 
 
     amenity_type = {
@@ -115,8 +178,9 @@ class Analyser_Merge_Restaurant_FR_aquitaine(Analyser_Merge):
                 return self.cuisine_categorie[categorie]
             if fields["SPECIALITES"] in self.cuisine_specialite:
                 return self.cuisine_specialite[fields["SPECIALITES"]]
-            if fields["SPECIALITES"] and (u"Régionale française" in fields["SPECIALITES"] or u"Cuisine traditionnelle" in fields["SPECIALITES"]):
-                return "regional"
-            if fields["SPECIALITES"] and u"Sandwichs" in fields["SPECIALITES"]:
-                return "sandwich"
+            if fields["SPECIALITES"]:
+                if (u"Régionale française" in fields["SPECIALITES"] or u"Cuisine traditionnelle" in fields["SPECIALITES"]):
+                    return "regional"
+                if u"Sandwichs" in fields["SPECIALITES"]:
+                    return "sandwich"
         return None

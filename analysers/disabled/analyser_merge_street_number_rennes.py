@@ -26,17 +26,35 @@ from .analyser_merge_street_number import _Analyser_Merge_Street_Number
 
 class Analyser_Merge_Street_Number_Rennes(_Analyser_Merge_Street_Number):
     def __init__(self, config, logger = None):
-        _Analyser_Merge_Street_Number.__init__(self, config, 7, "Rennes", logger,
+        _Analyser_Merge_Street_Number.__init__(
+            self,
+            config,
+            7,
+            "Rennes",
+            logger,
             "https://data.rennesmetropole.fr/explore/dataset/rva-bal/information/",
             "Référentiel voies et adresses de Rennes Métropole",
             CSV(
                 SourceOpenDataSoft(
                     url="https://data.rennesmetropole.fr/explore/dataset/rva-bal",
-                    attribution="Rennes Métropole")),
-            Load("long", "lat",
-                where = lambda res: res["numero"] != "99999"),
+                    attribution="Rennes Métropole",
+                )
+            ),
+            Load("long", "lat", where=lambda res: res["numero"] != "99999"),
             Conflate(
-                mapping = Mapping(
-                    static2 = {"source": self.source},
-                    mapping1 = {"addr:housenumber": lambda res: res["numero"] + (res["suffixe"] if res["suffixe"] else "")},
-                    text = lambda tags, fields: {"en": "{0}{1} {2}".format(fields["numero"], (fields["suffixe"] if fields["suffixe"] else ""), fields["voie_nom"])} )))
+                mapping=Mapping(
+                    static2={"source": self.source},
+                    mapping1={
+                        "addr:housenumber": lambda res: res["numero"]
+                        + (res["suffixe"] or "")
+                    },
+                    text=lambda tags, fields: {
+                        "en": "{0}{1} {2}".format(
+                            fields["numero"],
+                            fields["suffixe"] or "",
+                            fields["voie_nom"],
+                        )
+                    },
+                )
+            ),
+        )

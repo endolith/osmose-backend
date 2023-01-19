@@ -81,22 +81,20 @@ priority for the field on OSM.'''))
         if name_osm != name_insee and (not name_alt_osm or name_alt_osm != name_insee):
             simpleName = self.ToolsStripAccents(name_osm.lower().replace(u"-", u" ").replace(u" ", u"")).strip()
             simpleInseeName = self.ToolsStripAccents(name_insee.lower().replace(u"-", u" ").replace(u" ", u"")).strip()
-            msg = u"OSM=" + name_osm + u" => COG=" + name_insee
+            msg = f"OSM={name_osm} => COG={name_insee}"
             fix = {"name": name_insee}
-            if simpleName == simpleInseeName:
-                if ((u"œ" in name_insee) or (u"æ" in name_insee) or
-                     (u"Œ" in name_insee) or (u"Æ" in name_insee)):
-                    return # No correction on ligation (ML talk-fr 03/2009)
-                else:
-                    return {"class": 802, "subclass": 1, "text": {"en": msg}, "fix": {"~":fix}}
-            else:
+            if simpleName != simpleInseeName:
                 return {"class": 802, "subclass": 2, "text": {"en": msg}, "fix": fix}
+            if ((u"œ" in name_insee) or (u"æ" in name_insee) or
+                 (u"Œ" in name_insee) or (u"Æ" in name_insee)):
+                return # No correction on ligation (ML talk-fr 03/2009)
+            else:
+                return {"class": 802, "subclass": 1, "text": {"en": msg}, "fix": {"~":fix}}
 
     def node(self, data, tags):
-        if u"place" in tags:
-            if u"name" not in tags:
-                # Le nom est obligatoire en complément du tag place.
-                return {"class": 800, "subclass": 0, "text": T_("Node with place={0} without name", tags[u"place"])}
+        if u"place" in tags and u"name" not in tags:
+            # Le nom est obligatoire en complément du tag place.
+            return {"class": 800, "subclass": 0, "text": T_("Node with place={0} without name", tags[u"place"])}
 
     def relation(self, relation, tags, members):
         if tags.get(u"boundary") == u"administrative" and tags.get(u"admin_level") == u"8":

@@ -40,8 +40,7 @@ class IssuesFileOsmose(IssuesFile):
 
     def analyser(self, timestamp, analyser_version, change=False):
         self.mode = "analyserChange" if change else "analyser"
-        attrs = {}
-        attrs["timestamp"] = timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
+        attrs = {"timestamp": timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")}
         attrs["analyser_version"] = str(analyser_version)
         if self.version is not None:
             attrs["version"] = self.version
@@ -110,11 +109,9 @@ class IssuesFileOsmose(IssuesFile):
         self.outxml.startElement("fixes", {})
         for fix in fixes:
             self.outxml.startElement("fix", {})
-            i = 0
-            for f in fix:
+            for i, f in enumerate(fix):
                 if f is not None and i < len(types):
-                    type = types[i]
-                    if type:
+                    if type := types[i]:
                         self.outxml.startElement(type, {'id': str(ids[i])})
                         for opp, tags in f.items():
                             for k in tags:
@@ -123,6 +120,5 @@ class IssuesFileOsmose(IssuesFile):
                                 else:
                                     self.outxml.Element('tag', {'action': self.FixTable[opp], 'k': k})
                         self.outxml.endElement(type)
-                i += 1
             self.outxml.endElement('fix')
         self.outxml.endElement('fixes')

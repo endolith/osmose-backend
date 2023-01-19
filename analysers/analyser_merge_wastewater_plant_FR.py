@@ -36,20 +36,54 @@ class Analyser_Merge_Wastewater_Plant_FR(Analyser_Merge_Point):
         self.init(
             u"http://www.sandre.eaufrance.fr/atlas/srv/fre/catalog.search#/metadata/ebef2115-bee5-40bb-b5cc-4593d82ba334",
             u"Stations de traitement des eaux usées - France entière",
-            CSV(Source(attribution = u"Sandre", millesime = "09/2019",
-                    fileUrl = u"https://services.sandre.eaufrance.fr/geo/odp?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&typename=SysTraitementEauxUsees&SRSNAME=EPSG:4326&OUTPUTFORMAT=CSV")),
-            Load_XY("LongWGS84OuvrageDepollution", "LatWGS84OuvrageDepollution",
-                select = {"DateMiseHorServiceOuvrageDepollution": False}),
+            CSV(
+                Source(
+                    attribution=u"Sandre",
+                    millesime="09/2019",
+                    fileUrl=u"https://services.sandre.eaufrance.fr/geo/odp?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&typename=SysTraitementEauxUsees&SRSNAME=EPSG:4326&OUTPUTFORMAT=CSV",
+                )
+            ),
+            Load_XY(
+                "LongWGS84OuvrageDepollution",
+                "LatWGS84OuvrageDepollution",
+                select={"DateMiseHorServiceOuvrageDepollution": False},
+            ),
             Conflate(
-                select = Select(
-                    types = ["nodes", "ways"],
-                    tags = {"man_made": "wastewater_plant"}),
-                conflationDistance = 200,
-                osmRef = "ref:sandre",
-                mapping = Mapping(
-                    static1 = {"man_made": "wastewater_plant"},
-                    static2 = {"source": self.source},
-                    mapping1 = {
+                select=Select(
+                    types=["nodes", "ways"], tags={"man_made": "wastewater_plant"}
+                ),
+                conflationDistance=200,
+                osmRef="ref:sandre",
+                mapping=Mapping(
+                    static1={"man_made": "wastewater_plant"},
+                    static2={"source": self.source},
+                    mapping1={
                         "ref:sandre": "CdOuvrageDepollution",
-                        "start_date": lambda fields: None if not fields.get(u"DateMiseServiceOuvrageDepollution") else fields[u"DateMiseServiceOuvrageDepollution"][0:4] if fields[u"DateMiseServiceOuvrageDepollution"].endswith('-01-01') or fields[u"DateMiseServiceOuvrageDepollution"].endswith('-12-31') else fields[u"DateMiseServiceOuvrageDepollution"]},
-                    text = lambda tags, fields: {"en": ', '.join(filter(lambda x: x, [fields["NomOuvrageDepollution"], fields["LbSystemeCollecte"], fields["NomAgglomerationAssainissement"]]))} )))
+                        "start_date": lambda fields: (
+                            fields[u"DateMiseServiceOuvrageDepollution"][:4]
+                            if fields[
+                                u"DateMiseServiceOuvrageDepollution"
+                            ].endswith('-01-01')
+                            or fields[
+                                u"DateMiseServiceOuvrageDepollution"
+                            ].endswith('-12-31')
+                            else fields[u"DateMiseServiceOuvrageDepollution"]
+                        )
+                        if fields.get(u"DateMiseServiceOuvrageDepollution")
+                        else None,
+                    },
+                    text=lambda tags, fields: {
+                        "en": ', '.join(
+                            filter(
+                                lambda x: x,
+                                [
+                                    fields["NomOuvrageDepollution"],
+                                    fields["LbSystemeCollecte"],
+                                    fields["NomAgglomerationAssainissement"],
+                                ],
+                            )
+                        )
+                    },
+                ),
+            ),
+        )

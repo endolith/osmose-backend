@@ -62,7 +62,7 @@ class Date(Plugin):
             return self.check(string[1:])
         if string[-1] == 's':
             return self.check(string[:-1])
-        if string[-3:] == ' BC' or string[-3:] == ' AD':
+        if string[-3:] in [' BC', ' AD']:
             return self.check(string[:-3])
         if len(string) == 4 and self.Year.match(string):
             return True

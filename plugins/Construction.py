@@ -30,10 +30,10 @@ class Construction(Plugin):
         Plugin.init(self, logger)
         if self.father.config.options.get("project") != 'openstreetmap':
             return False
-        self.errors[4070] = self.def_class(item = 4070, level = 2, tags = ['tag', 'fix:survey'],
-            title = T_('Finished construction'),
-            detail = T_(
-'''There is no tag `opening_date`, `check_date`, `open_date`,
+            self.errors[4070] = self.def_class(item = 4070, level = 2, tags = ['tag', 'fix:survey'],
+                title = T_('Finished construction'),
+                detail = T_(
+        '''There is no tag `opening_date`, `check_date`, `open_date`,
 `construction:date`, `temporary:date_on`, `date_on` and the object has
 been in construction for more than two years or opening data is
 exceeded.'''))
@@ -41,7 +41,7 @@ exceeded.'''))
         self.tag_construction = ["highway", "landuse", "building"]
         self.tag_date = ["opening_date", "open_date", "construction:date", "temporary:date_on", "date_on"]
         self.default_date = datetime.datetime(9999, 12, 1)
-        self.today = datetime.datetime.today()
+        self.today = datetime.datetime.now()
         self.date_limit = datetime.timedelta(days=2 * 365)
         self.recall = int(self.total_seconds(datetime.timedelta(days=6 * 30)))
 
@@ -65,12 +65,11 @@ exceeded.'''))
             pass
 
     def node(self, data, tags):
-        construction_found = False
-        for t in tags:
-            if t == "construction" or (t.startswith("construction:") and t != "construction:date"):
-                construction_found = True
-                break
-
+        construction_found = any(
+            t == "construction"
+            or (t.startswith("construction:") and t != "construction:date")
+            for t in tags
+        )
         if not construction_found:
             for t in self.tag_construction:
                 if tags.get(t) == "construction":
@@ -81,15 +80,17 @@ exceeded.'''))
             return
 
         date = None
-        tagDate = self.getTagDate(tags)
-        if tagDate:
+        if tagDate := self.getTagDate(tags):
             date = self.convert2date(tagDate)
 
         end_date = False
         if date:
             end_date = date
         elif "timestamp" in data:
-            end_date = datetime.datetime.strptime(data["timestamp"][0:10], "%Y-%m-%d") + self.date_limit
+            end_date = (
+                datetime.datetime.strptime(data["timestamp"][:10], "%Y-%m-%d")
+                + self.date_limit
+            )
         else:
             return
 
@@ -170,9 +171,9 @@ class Test(TestPluginCommon):
 
     def test_recall(self):
         tags = {"construction": "yes"}
-        today = datetime.datetime.today()
+        today = datetime.datetime.now()
         td = datetime.timedelta(days=6 * 30)
-        for i in range(5, 10, 1):
+        for i in range(5, 10):
             e = self.p.node({"timestamp": (today - i*td).strftime("%Y-%m-%d")}, tags)
             self.check_err(e, i)
             assert e["subclass"] == i - 5

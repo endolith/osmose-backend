@@ -31,13 +31,18 @@ class Analyser_Merge_Public_Transport_BE_Wallonia(Analyser_Merge):
         self.possible_merge   = {"item":"8041", "class": 73, "level": 3, "tag": ["merge", "public transport"], "desc": T_(u"Wallonia stop, integration suggestion") }
         self.init(
             Source(
-                url = u"http://opendata.awt.be/dataset/tec",
-                name = u"Données TEC",
-                file = "public_transport_BE_wallonia.csv.bz2", bz2 = True,
-                encoding = "ISO-8859-15",
-                csv = CSV(separator = u"|", header = False)),
-            Load("X coordinate", "Y coordinate", srid = 31370,
-                create = """
+                url=u"http://opendata.awt.be/dataset/tec",
+                name=u"Données TEC",
+                file="public_transport_BE_wallonia.csv.bz2",
+                bz2=True,
+                encoding="ISO-8859-15",
+                csv=CSV(separator=u"|", header=False),
+            ),
+            Load(
+                "X coordinate",
+                "Y coordinate",
+                srid=31370,
+                create="""
                     "Stop identifier" character(8),
                     "Description (Dutch)" character(50),
                     "Description (French)" character(50),
@@ -52,26 +57,48 @@ class Analyser_Merge_Public_Transport_BE_Wallonia(Analyser_Merge):
                     "Y coordinate" character(10),
                     "Public information" character(1),
                     "UIC" character(9)
-                """),
+                """,
+            ),
             Conflate(
-                select = Select(
-                    types = ["nodes", "ways"],
-                    tags = [{"highway": "bus_stop"}, {"public_transport": "platform"}]),
-                osmRef = "ref",
-                conflationDistance = 300,
-                mapping = Mapping(
-                    static1 = {
+                select=Select(
+                    types=["nodes", "ways"],
+                    tags=[
+                        {"highway": "bus_stop"},
+                        {"public_transport": "platform"},
+                    ],
+                ),
+                osmRef="ref",
+                conflationDistance=300,
+                mapping=Mapping(
+                    static1={
                         "highway": "bus_stop",
                         "public_transport": "platform",
                         "bus": "yes",
-                        "operator": "TEC"},
-                    static2 = {
-                        "source": u"tec-wl.be - 07-2014"},
-                    mapping1 = {
-                        "ref": lambda res: res["Stop identifier"][0:7],
-                        "name": lambda res: res["Description (Dutch)"].strip() if res["Description (Dutch)"] == res["Description (French)"] else "%s - %s" % (res["Description (French)"].strip(), res["Description (Dutch)"].strip()),
-                        "name:fr": lambda res: res["Description (French)"].strip() if res["Description (Dutch)"] != res["Description (French)"] else None,
-                        "name:nl": lambda res: res["Description (Dutch)"].strip() if res["Description (Dutch)"] != res["Description (French)"] else None,
+                        "operator": "TEC",
+                    },
+                    static2={"source": u"tec-wl.be - 07-2014"},
+                    mapping1={
+                        "ref": lambda res: res["Stop identifier"][:7],
+                        "name": lambda res: res["Description (Dutch)"].strip()
+                        if res["Description (Dutch)"]
+                        == res["Description (French)"]
+                        else f'{res["Description (French)"].strip()} - {res["Description (Dutch)"].strip()}',
+                        "name:fr": lambda res: res["Description (French)"].strip()
+                        if res["Description (Dutch)"]
+                        != res["Description (French)"]
+                        else None,
+                        "name:nl": lambda res: res["Description (Dutch)"].strip()
+                        if res["Description (Dutch)"]
+                        != res["Description (French)"]
+                        else None,
                         "uic_ref": "UIC",
-                        "whellchair": lambda res: {"0": "no", "1": "yes"}[res["Accessible"]]},
-                    text = lambda tags, fields: {"en": u"Wallonia stop of %s, %s, %s" % (fields["Description (French)"].strip(), fields["Streetname (French)"].strip(), fields["Municipality (French)"].strip())} )))
+                        "whellchair": lambda res: {"0": "no", "1": "yes"}[
+                            res["Accessible"]
+                        ],
+                    },
+                    text=lambda tags, fields: {
+                        "en": f'Wallonia stop of {fields["Description (French)"].strip()}, {fields["Streetname (French)"].strip()}, {fields["Municipality (French)"].strip()}'
+                    },
+                ),
+            ),
+        )
